@@ -22,3 +22,5 @@ fields then hit 'Run'. After a few moments, your personal .csv files will be gen
 personal use.
 
 The included .csv files are example outputs of what to expect and are the direct product of scraping my personal account.
+Don't worry about deleting the files as when the program is run successfully, the contents will be overwritten with
+your account's information.
