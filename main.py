@@ -27,7 +27,7 @@ with requests.session() as s:
 
     # Obtain information from tag <table>
     mechs_table = soup.find('table', class_='table table-striped')
-    # print(mechs_table)
+
 
     # Collect the headers
     headers = []
