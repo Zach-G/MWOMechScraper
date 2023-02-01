@@ -118,11 +118,19 @@ with requests.session() as s:
     for b in range(len(mutated_times)):
         sorted_time_played.loc[sorted_time_played.index[b], 'Time Played'] = mutated_times[b]
 
+    # Remove column that offers no real beneficial information
+    sorted_time_played.drop(columns=['XP Earned'], inplace=True)
+
     # As the mech's were already previously sorted, and we have done no rearranging, simply output to .csv
     sorted_time_played.to_csv('mech_data_sorted_TP.csv', index=False)
 
+    # ---------- Sort by Matches Played ----------
     # Create .csv of mech's sorted by matches played.
     sorted_matches_played = pd.read_csv('mech_data_unsorted.csv')
+
+    # Removed columns that offer no real beneficial information
+    sorted_matches_played.drop(columns=['Time Played', 'XP Earned'], inplace=True)
+
     sorted_matches_played.sort_values(["Matches Played"], axis=0, ascending=False, inplace=True)
     sorted_matches_played.to_csv('mech_data_sorted_MP.csv', index=False)
 
