@@ -15,12 +15,34 @@ send you their owned_mechs.csv. Coalesce multiple players owned_mechs.csvs to qu
 drop-deck based on what people already own!
 
 HOW TO USE:
-Load the program up in your favorite Python interpreter.
-Import the libraries.
-Navigate over to the creds.py and input your email and password associated with your account within the appropriate
-fields then hit 'Run'. After a few moments, your personal .csv files will be generated for your viewing pleasure and
-personal use.
+You will need to download and install the latest version of Python.
+    Steps to install Python:
+        1) Open your web-browser and navigate to https://www.python.org/
+        2) Navigate to Downloads and install the latest appropriate version based on the machine you are running on.
+        3) Double click the downloaded file and install for all users. Please ensure that Python is added to your path.
+           (This will ensure that you can use Python from any location in your file system)
+        4) Once installation is completed, select 'Disable path length limit' so that you can use more than 260 characters
+           in a file path.
+        5) Press the 'Close' button to end the installation.
+
+
+Once you have installed Python simply download scroll up, find the big green '<>Code' button, click on it,
+select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
+
+Next, you will need the libraries associated with the script.
+Open the Command Prompt and type the following commands,
+pip install BeautifulSoup4
+pip install requests
+pip install pandas
+
+BeautifulSoup4 allows us to pull data from HTML and XML files and parse it.
+requests allows us to make HTTP requests, or in our case, log in to mwomercs.com.
+pandas allows us to analyze and format the data scraped from mwomercs.com.
+
+Now navigate to where you extracted the contents to and double-click main.py to run the script.
+
+The script will prompt you for the email and password that you use for mwomercs.com. Type in your email and password
+when prompted and now wait until your personal .csv files have been created!
 
 The included .csv files are example outputs of what to expect and are the direct product of scraping my personal account.
-Don't worry about deleting the included .csv files. When the program is run successfully the contents will be
-overwritten with your account's information.
+You may delete all included .csv files as they will be generated for you anyway when the program is run.
