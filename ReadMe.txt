@@ -26,7 +26,7 @@ You will need to download and install the latest version of Python.
         5) Press the 'Close' button to end the installation.
 
 
-Once you have installed Python simply download scroll up, find the big green '<>Code' button, click on it,
+Once you have installed Python simply scroll up, find the big green '<>Code' button, click on it,
 select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
 
 Next, you will need the libraries associated with the script.
