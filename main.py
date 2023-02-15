@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import os
 
 
 # Urls
@@ -14,6 +15,10 @@ profileMechStats_url = 'https://mwomercs.com/profile/stats?type=mech'
 collection_data_url = 'https://mwomercs.com/mech-collection/data'
 # Logged-In Player's Profile Webpage
 player_url = 'https://mwomercs.com/profile'
+
+# print("File location using os.cwd(): ", os.getcwd())
+# Current Working Directory, needed for the storing of the files being created.
+cwd = os.getcwd()
 
 # Gather user credentials
 playeremail = input("Please enter your email: ")
@@ -29,6 +34,11 @@ payload = {
 
 print("Attempting to log in to mwomercs.com with the supplied credentials and gather the relevant information."
       " One moment please. :)")
+
+print("Please do not touch your keyboard while the program is working. Unless you want this prompt to disappear"
+      " into the aether upon completion.")
+
+
 try:
     # Open a session
     with requests.session() as s:
@@ -56,7 +66,7 @@ try:
             mech_data.loc[length] = row
 
         # Convert scraped data table to .csv
-        mech_data.to_csv('mech_data_unsorted.csv', index=False)
+        mech_data.to_csv(cwd + '\\' + 'mech_data_unsorted.csv', index=False)
 
         # ----------- Sort By Time Played -----------
         sorted_time_played = pd.read_csv('mech_data_unsorted.csv')
@@ -132,7 +142,7 @@ try:
         sorted_time_played.drop(columns=['XP Earned'], inplace=True)
 
         # As the mech's were already previously sorted, and we have done no rearranging, simply output to .csv
-        sorted_time_played.to_csv('mech_data_sorted_TP.csv', index=False)
+        sorted_time_played.to_csv(cwd + '\\' + 'mech_data_sorted_TP.csv', index=False)
 
         # ---------- Sort by Matches Played ----------
         # Create .csv of mech's sorted by matches played.
@@ -142,7 +152,7 @@ try:
         sorted_matches_played.drop(columns=['Time Played', 'XP Earned'], inplace=True)
 
         sorted_matches_played.sort_values(["Matches Played"], axis=0, ascending=False, inplace=True)
-        sorted_matches_played.to_csv('mech_data_sorted_MP.csv', index=False)
+        sorted_matches_played.to_csv(cwd + '\\' + 'mech_data_sorted_MP.csv', index=False)
 
         # Get player profile name
         r2 = s.get(player_url)
@@ -154,7 +164,7 @@ try:
         response = s.get(collection_data_url)
 
         # Create a file to store the raw data
-        file1 = open(playername + "_" + 'mech_collection.json', 'w')
+        file1 = open(cwd + '\\' + playername + "_" + 'mech_collection.json', 'w')
 
         # Fill the file with the data for use
         file1.writelines(response.text)
@@ -165,7 +175,7 @@ try:
         # A list container to store which 'mechs are owned
         owned_mechs = []
 
-        with open(playername + "_"+ 'mech_collection.json') as f:
+        with open(cwd + "\\" + playername + "_" + 'mech_collection.json') as f:
             # Convert the JSON file into a python recognizable data format (I.E., Dict)
             data = json.load(f)
             collection = data['collection']
@@ -179,7 +189,7 @@ try:
             df_owned_mechs = pd.DataFrame(owned_mechs, columns=['Owned \'Mechs'])
 
             # Create a .csv from the dataframe of owned 'mechs
-            df_owned_mechs.to_csv(playername + "_" + 'owned_mechs.csv', index=False)
+            df_owned_mechs.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs.csv', index=False)
 
             print("Your spreadsheets have been created! :D")
 except AttributeError:

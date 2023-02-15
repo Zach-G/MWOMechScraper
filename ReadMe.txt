@@ -2,6 +2,12 @@ MWOMechScraper
 
 READ ME!
 
+IMPORTANT:
+This tool needs to log into your MWO Profile page to access your mech data. Your log-in credentials are not stored or
+visible to anyone. However, this tool makes no attempt to hide your credentials on your personal screen.
+Please, feel free to review the code yourself and ensure that the only addresses used are the MWOMercs login and
+profile pages.
+
 
 This tool was developed by Zach Gherman to assist players to more easily view the 'Mechs they have played the most and
 have the most time piloting for the online video game MechWarriorOnline. This tool simply opens a session with the
@@ -14,7 +20,13 @@ No longer are the days of asking players if they own a specific 'Mech, simply po
 send you their owned_mechs.csv. Coalesce multiple players owned_mechs.csvs to quickly and efficiently build your teams
 drop-deck based on what people already own!
 
+
 HOW TO USE:
+
+There are two methods of running this tool. Method 1 entails installing Python on your machine and running the script
+directly. Method 2 is simply running the executable!
+
+Method 1,
 You will need to download and install the latest version of Python.
     Steps to install Python:
         1) Open your web-browser and navigate to https://www.python.org/
@@ -25,15 +37,26 @@ You will need to download and install the latest version of Python.
            in a file path.
         5) Press the 'Close' button to end the installation.
 
+Next, you need to ensure that your PC understands where Python is located on your PC.
+    Steps to set up your PATH environment to include Python, so you can run the script:
+        1) Left-click the Windows button on your taskbar then right-click "This PC" and select "Properties".
+        2) Look for "Advanced system settings" on the window that pops up and left-click it.
+        3) Left-click on the "Environment Variables" button on the bottom right.
+        4) In the "System variables" section, select the "Path" variable and click "Edit". The next screen shows all
+           directories that are currently associated with the PATH variable.
+        5) Left-click "New" and enter Python's install directory (The C: path to where Python was installed).
+           NOTE: Usually you can find the installed binary in this path location,
+                 C:\Users\AppData\Local\Programs\Python
+
 
 Once you have installed Python simply scroll up, find the big green '<>Code' button, click on it,
 select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
 
 Next, you will need the libraries associated with the script.
 Open the Command Prompt and type the following commands,
-pip install BeautifulSoup4
-pip install requests
-pip install pandas
+python -m pip install BeautifulSoup4
+python -m pip install requests
+python -m pip install pandas
 
 BeautifulSoup4 allows us to pull data from HTML and XML files and parse it.
 requests allows us to make HTTP requests, or in our case, log in to mwomercs.com.
@@ -41,8 +64,24 @@ pandas allows us to analyze and format the data scraped from mwomercs.com.
 
 Now navigate to where you extracted the contents to and double-click main.py to run the script.
 
-The script will prompt you for the email and password that you use for mwomercs.com. Type in your email and password
-when prompted and now wait until your personal .csv files have been created!
+
+Method 2,
+Within the files downloaded, you will see a folder labeled 'dist'. Open that folder and run "main.exe".
+
+
+No matter what method you choose to employ, the script will prompt you for the email and password that you use for
+mwomercs.com. Type in your email and password when prompted and now wait until your personal .csv files have
+been created!
 
 The included .csv files are example outputs of what to expect and are the direct product of scraping my personal account.
-You may delete all included .csv files as they will be generated for you anyway when the program is run.
+You may delete all included .csv files as they will be generated for you anyway when the program is run. If the tool
+is run via the .exe, the output .csv files will be created in whatever directory the .exe was run in (this will be the
+'dist' folder if you didn't move the executable).
+
+
+
+Thank you Tarogato for being a guinea pig and helping me test this tool via attempting to follow the README.
+- Including Python to Path environment
+- Updating command prompt pip commands
+
+A big thank you to Woodrick for asking that this tool be developed.
