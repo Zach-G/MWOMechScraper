@@ -20,12 +20,14 @@ No longer are the days of asking players if they own a specific 'Mech, simply po
 send you their owned_mechs.csv. Coalesce multiple players owned_mechs.csvs to quickly and efficiently build your teams
 drop-deck based on what people already own!
 
+________________________________________________________________________________________________________________________
 
 HOW TO USE:
 
 There are two methods of running this tool. Method 1 entails installing Python on your machine and running the script
 directly. Method 2 is simply running the executable!
 
+************************************************************************************************************************
 Method 1,
 You will need to download and install the latest version of Python.
     Steps to install Python:
@@ -63,25 +65,27 @@ requests allows us to make HTTP requests, or in our case, log in to mwomercs.com
 pandas allows us to analyze and format the data scraped from mwomercs.com.
 
 Now navigate to where you extracted the contents to and double-click main.py to run the script.
+************************************************************************************************************************
 
-
+************************************************************************************************************************
 Method 2,
 Within the files downloaded, you will see a folder labeled 'dist'. Open that folder and run "main.exe".
-
+************************************************************************************************************************
 
 No matter what method you choose to employ, the script will prompt you for the email and password that you use for
 mwomercs.com. Type in your email and password when prompted and now wait until your personal .csv files have
 been created!
 
 The included .csv files are example outputs of what to expect and are the direct product of scraping my personal account.
-You may delete all included .csv files as they will be generated for you anyway when the program is run. If the tool
-is run via the .exe, the output .csv files will be created in whatever directory the .exe was run in (this will be the
-'dist' folder if you didn't move the executable).
+You may delete all included .csv files as they will be generated for you anyway when the program is run.
 
+If the tool is run via the .exe, the output .csv files will be created in whatever directory the .exe was run in
+(this will be the 'dist' folder if you didn't move the executable).
 
-
+________________________________________________________________________________________________________________________
 Thank you Tarogato for being a guinea pig and helping me test this tool via attempting to follow the README.
 - Including Python to Path environment
 - Updating command prompt pip commands
+- Updating ReadMe
 
 A big thank you to Woodrick for asking that this tool be developed.
