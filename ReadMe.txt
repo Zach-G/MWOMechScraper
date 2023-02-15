@@ -2,13 +2,6 @@ MWOMechScraper
 
 READ ME!
 
-IMPORTANT:
-This tool needs to log into your MWO Profile page to access your mech data. Your log-in credentials are not stored or
-visible to anyone. However, this tool makes no attempt to hide your credentials on your personal screen.
-Please, feel free to review the code yourself and ensure that the only addresses used are the MWOMercs login and
-profile pages.
-
-
 This tool was developed by Zach Gherman to assist players to more easily view the 'Mechs they have played the most and
 have the most time piloting for the online video game MechWarriorOnline. This tool simply opens a session with the
 mwomercs.com webpage and navigates to the players profile mechstat page and scrapes data from the table available. It
@@ -19,6 +12,13 @@ MWOMechScraper now also spits out another .csv which contains a list of all 'Mec
 No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them
 send you their owned_mechs.csv. Coalesce multiple players owned_mechs.csvs to quickly and efficiently build your teams
 drop-deck based on what people already own!
+________________________________________________________________________________________________________________________
+
+IMPORTANT:
+This tool needs to log into your MWO Profile page to access your mech data. Your log-in credentials are not stored or
+visible to anyone. However, this tool makes no attempt to hide your credentials on your personal screen.
+Please, feel free to review the code yourself and ensure that the only addresses used are the MWOMercs login and
+profile pages.
 
 ________________________________________________________________________________________________________________________
 
