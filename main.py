@@ -16,7 +16,6 @@ collection_data_url = 'https://mwomercs.com/mech-collection/data'
 # Logged-In Player's Profile Webpage
 player_url = 'https://mwomercs.com/profile'
 
-# print("File location using os.cwd(): ", os.getcwd())
 # Current Working Directory, needed for the storing of the files being created.
 cwd = os.getcwd()
 
