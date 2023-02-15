@@ -69,7 +69,9 @@ Now navigate to where you extracted the contents to and double-click main.py to 
 
 ************************************************************************************************************************
 Method 2,
-Within the files downloaded, you will see a folder labeled 'dist'. Open that folder and run "main.exe".
+Scroll up to and find the big green '<>Code' button, click on it, select 'Download ZIP', and extract the contents of the
+.zip file wherever you like.
+Within the extracted files, you will see a folder labeled 'dist'. Open that folder and run "main.exe".
 ************************************************************************************************************************
 
 No matter what method you choose to employ, the script will prompt you for the email and password that you use for
