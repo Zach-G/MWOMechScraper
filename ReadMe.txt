@@ -8,10 +8,11 @@ mwomercs.com webpage and navigates to the players profile mechstat page and scra
 then compiles the data and transforms it into easy-to-read .csv (comma separated value) files {mech_data_unsorted.csv,
 mech_data_sorted_TP.csv, and mech_data_sorted_MP.csv}. The sorted .csv files list 'Mechs in descending order for quick
 and easy comprehension of what 'Mechs that player plays the most. 
-MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own!
+MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own as well as a list
+of all your mech's wih the names you gave them and how many skill points they have equipped!
 No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them
-send you their owned_mechs.csv. Coalesce multiple players owned_mechs.csvs to quickly and efficiently build your teams
-drop-deck based on what people already own!
+send you their owned_mechs.csv or owned_mechs_SP.csv. Coalesce multiple players owned_mechs.csvs to quickly and
+efficiently build your teams drop-deck based on what people already own!
 ________________________________________________________________________________________________________________________
 
 IMPORTANT:
