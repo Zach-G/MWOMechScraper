@@ -70,9 +70,10 @@ Now navigate to where you extracted the contents to and double-click main.py to 
 
 ************************************************************************************************************************
 Method 2,
-Scroll up to and find the big green '<>Code' button, click on it, select 'Download ZIP', and extract the contents of the
-.zip file wherever you like.
-Within the extracted files, you will see a folder labeled 'dist'. Open that folder and run "main.exe".
+Head over to the latest release ( https://github.com/Zach-G/MWOMechScraper/releases/tag/v1.0.2 ) and scroll down to the
+bottom of the page. Click 'main.exe' and a download will begin. Once it is finished downloading you can simply run the
+executable! Note that the .csv files the tool creates will be created in the same folder that the executable is run
+in. So if you don't cut/paste the executable to a folder then the .csv's will be created in your downloads folder.
 ************************************************************************************************************************
 
 No matter what method you choose to employ, the script will prompt you for the email and password that you use for
