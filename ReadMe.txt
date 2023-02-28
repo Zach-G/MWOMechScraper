@@ -92,7 +92,8 @@ I will work on an "offline" version in which players can send their HTML's to so
 This however will require more effort from the users as they will need to ensure that they load all the data on their
 profile page by hovering their mouse over each individual 'Mech they own before exporting the HTML. This is because the
 data is grabbed from the website using GET requests to the player's unique JSON once the player hovers over the owned
-'Mech. Without
+'Mech. Without the GET requests, the HTML is incomplete and grabbing the Mech names and number of skill points equipped 
+to each individual 'Mech is impossible.
 
 ________________________________________________________________________________________________________________________
 Thank you Tarogato for being a guinea pig and helping me test this tool via attempting to follow the README.
