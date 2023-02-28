@@ -29,11 +29,31 @@ ________________________________________________________________________________
 
 HOW TO USE:
 
-There are two methods of running this tool. Method 1 entails installing Python on your machine and running the script
-directly. Method 2 is simply running the executable!
+To run this tool simply download and run the executable located in https://github.com/Zach-G/MWOMechScraper/releases. 
+Just scroll down to the bottom of the page, click 'MWOMechScraper.exe' and the download will begin. The tool will then 
+be residing in your 'downloads' folder. Please note that MWOMechScraper will create the csv files in whatever folder 
+it is contained in. I.E, If you run the tool from your downloads folder, it will generate the csv files in your downloads 
+folder.
+
+Again, the tool will prompt you for the email and password that you use for mwomercs.com.
+Type in your email and password when prompted and now wait until your personal .csv files have been created!
 
 ************************************************************************************************************************
-Method 1,
+I will work on an "offline" version in which players can send their HTML's to someone to have the .CSVs created.
+This however will require more effort from the users as they will need to ensure that they load all the data on their
+profile page by hovering their mouse over each individual 'Mech they own before exporting the HTML. This is because the
+data is grabbed from the website using GET requests to the player's unique JSON once the player hovers over the owned
+'Mech. Without the GET requests, the HTML is incomplete and grabbing the Mech names and number of skill points equipped 
+to each individual 'Mech is impossible.
+
+
+
+************************************************************************************************************************
+For those who are skeptical about running the executable and would prefer to run the source code instead, you will need 
+to download and install Python, add Python to your Path environment, and then download all the libraries associated with 
+the tool. Below I have listed the steps to install Python, ensure that Python is in your Path environment, and the command 
+prompt lines to install the required libraries.
+
 You will need to download and install the latest version of Python.
     Steps to install Python:
         1) Open your web-browser and navigate to https://www.python.org/
@@ -61,10 +81,6 @@ Next, you need to ensure that your PC understands where Python is located on you
            NOTE: Usually you can find the installed binary in this path location if you did not select a path,
                  C:\Users\AppData\Local\Programs\Python
 
-
-Once you have installed Python simply scroll up, find the big green '<>Code' button, click on it,
-select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
-
 Next, you will need the libraries associated with the script.
 Open the Command Prompt and type the following commands,
 python -m pip install BeautifulSoup4
@@ -79,34 +95,11 @@ pandas allows us to analyze and format the data scraped from mwomercs.com.
 maskpass allows us to hide the password on input.
 regex is used for regular expressions.
 
+Once you have installed Python and all the required libraries simply scroll up, find the big green '<>Code' button, 
+click on it, select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
+
 Now navigate to where you extracted the contents to and double-click main.py to run the script.
 ************************************************************************************************************************
-
-************************************************************************************************************************
-Method 2,
-Head over to the latest release ( https://github.com/Zach-G/MWOMechScraper/releases/tag/v1.0.4 ) and scroll down to the
-bottom of the page. Click 'MWOMechScraper.exe' and a download will begin. Once it is finished downloading you can simply
- run the executable! Note that the .csv files the tool creates will be created in the same folder that the executable is
- run in. So if you don't cut/paste the executable to a folder then the .csv's will be created in your downloads folder.
-************************************************************************************************************************
-
-No matter what method you choose to employ, the script will prompt you for the email and password that you use for
-mwomercs.com. Type in your email and password when prompted and now wait until your personal .csv files have
-been created!
-
-The included .csv files are example outputs of what to expect and are the direct product of scraping my personal account.
-You may delete all included .csv files as they will be generated for you anyway when the program is run.
-
-If the tool is run via the .exe, the output .csv files will be created in whatever directory the .exe was run in
-(this will be the 'dist' folder if you didn't move the executable).
-
-************************************************************************************************************************
-I will work on an "offline" version in which players can send their HTML's to someone to have the .CSVs created.
-This however will require more effort from the users as they will need to ensure that they load all the data on their
-profile page by hovering their mouse over each individual 'Mech they own before exporting the HTML. This is because the
-data is grabbed from the website using GET requests to the player's unique JSON once the player hovers over the owned
-'Mech. Without the GET requests, the HTML is incomplete and grabbing the Mech names and number of skill points equipped 
-to each individual 'Mech is impossible.
 
 ________________________________________________________________________________________________________________________
 Thank you Tarogato for being a guinea pig and helping me test this tool via attempting to follow the README.
