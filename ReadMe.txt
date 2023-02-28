@@ -7,19 +7,23 @@ have the most time piloting for the online video game MechWarriorOnline. This to
 mwomercs.com webpage and navigates to the players profile mechstat page and scrapes data from the table available. It
 then compiles the data and transforms it into easy-to-read .csv (comma separated value) files {mech_data_unsorted.csv,
 mech_data_sorted_TP.csv, and mech_data_sorted_MP.csv}. The sorted .csv files list 'Mechs in descending order for quick
-and easy comprehension of what 'Mechs that player plays the most. 
-MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own as well as a list
-of all your mech's wih the names you gave them and how many skill points they have equipped!
+and easy comprehension of what 'Mechs that player plays the most.
+MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own in the format of
+[Base Mech, Variant, Name, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis
+variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Name is the name that the player has given
+the 'Mech in the Mechlab. The Number of Equipped Skill Points shows how skilled out a 'Mech is.
+
 No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them
-send you their owned_mechs.csv or owned_mechs_SP.csv. Coalesce multiple players owned_mechs.csvs to quickly and
-efficiently build your teams drop-deck based on what people already own!
+send you their owned_mechs_SP.csv. Coalesce multiple players owned_mechs_SP.csvs to quickly and efficiently build your
+teams drop-deck based on what people already own!
 ________________________________________________________________________________________________________________________
 
 IMPORTANT:
 This tool needs to log into your MWO Profile page to access your mech data. Your log-in credentials are not stored or
-visible to anyone. However, this tool makes no attempt to hide your credentials on your personal screen.
-Please, feel free to review the code yourself and ensure that the only addresses used are the MWOMercs login and
-profile pages.
+visible to anyone. However, this tool makes an attempt to hide your credentials on your personal screen by masking
+your password input with asterisks (*).
+Please, feel free to review the code yourself and ensure that the only addresses used are the MWOMercs login, profile
+pages and your personal accounts JSONs.
 
 ________________________________________________________________________________________________________________________
 
@@ -60,20 +64,24 @@ Open the Command Prompt and type the following commands,
 python -m pip install BeautifulSoup4
 python -m pip install requests
 python -m pip install pandas
+python -m pip install maskpass
+python -m pip install regex
 
 BeautifulSoup4 allows us to pull data from HTML and XML files and parse it.
 requests allows us to make HTTP requests, or in our case, log in to mwomercs.com.
 pandas allows us to analyze and format the data scraped from mwomercs.com.
+maskpass allows us to hide the password on input.
+regex is used for regular expressions.
 
 Now navigate to where you extracted the contents to and double-click main.py to run the script.
 ************************************************************************************************************************
 
 ************************************************************************************************************************
 Method 2,
-Head over to the latest release ( https://github.com/Zach-G/MWOMechScraper/releases/tag/v1.0.3 ) and scroll down to the
-bottom of the page. Click 'MWOMechScraper.exe' and a download will begin. Once it is finished downloading you can simply run the
-executable! Note that the .csv files the tool creates will be created in the same folder that the executable is run
-in. So if you don't cut/paste the executable to a folder then the .csv's will be created in your downloads folder.
+Head over to the latest release ( https://github.com/Zach-G/MWOMechScraper/releases/tag/v1.0.4 ) and scroll down to the
+bottom of the page. Click 'MWOMechScraper.exe' and a download will begin. Once it is finished downloading you can simply
+ run the executable! Note that the .csv files the tool creates will be created in the same folder that the executable is
+ run in. So if you don't cut/paste the executable to a folder then the .csv's will be created in your downloads folder.
 ************************************************************************************************************************
 
 No matter what method you choose to employ, the script will prompt you for the email and password that you use for
@@ -99,5 +107,7 @@ Thank you Tarogato for being a guinea pig and helping me test this tool via atte
 - Including Python to Path environment
 - Updating command prompt pip commands
 - Updating ReadMe
+- Pushing me to hide the password
+- Pointing out redundancies and suggesting additions to owned_mechs_SP.csv
 
 A big thank you to Woodrick for asking that this tool be developed.

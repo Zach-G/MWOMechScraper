@@ -1,9 +1,12 @@
 # Imports
 import json
+import re
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import os
+import maskpass
 
 
 # Urls
@@ -22,7 +25,9 @@ cwd = os.getcwd()
 # Gather user credentials
 playeremail = input("Please enter your email: ")
 
-playerpassword = input("Please enter your password: ")
+print("Press Left-CTRL to reveal your password.")
+
+playerpassword = maskpass.advpass()
 
 
 # Player's Credentials to be used on log-in
@@ -193,7 +198,8 @@ try:
         sorted_matches_played.to_csv(cwd + "\\" + playername + "_" + 'mech_data_sorted_MP.csv', index=False)
 
         print("Gathering information about player's owned 'Mechs "
-              "(Variant, Name, Skill Points) from players unique JSON")
+              "(Variant, Name, Skill Points) from players unique JSON located at "
+              "https://mwomercs.com/mech-collection/data")
 
         # ---------- Player Profile Scraper ----------
         response = s.get(collection_data_url)
@@ -228,7 +234,8 @@ try:
         # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
         list_mech_chass_name_SP = []
 
-        print("Gathering owned 'Mechs variant, name, and number of equipped skill points.")
+        print("Gathering owned 'Mechs base, variant, name, and number of equipped skill points from "
+              "https://mwomercs.com/mech-collection/data/stats?mid[]=<Individual 'Mechs MechID>")
         print("This may take a while, so please be patient.")
 
         for mech, mechID in dict_mechIDs.items():
@@ -244,28 +251,22 @@ try:
                 for mech_chassis in dict_spec_mech['mechs']:
                     mech_name = mech_chassis['name']
                     spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
-                    list_mech_chass_name_SP.append((mech, mech_name, spec_mech_skills))
 
-        print("Converting list of tuples (Variant, Name, Skillpoints) to data frame.")
+                    # regex stolen from https://stackoverflow.com/a/14599280 because I am bad with regex.
+                    # Documentation on regex can be found at https://docs.python.org/3/library/re.html
+                    # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
+                    # crafting of look-up tables.
+                    list_mech_chass_name_SP.append((re.sub("[\(\[].*?[\)\]]", "", mech), mech, mech_name, spec_mech_skills))
+
+        print("Converting list of tuples (Base, Variant, Name, Skillpoints) to data frame.")
 
         # Convert list of tuples (mech variant, name, equipped skillpoints) into a dataframe.
-        df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Variant', 'Name', 'Skill Points'])
+        df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Base', 'Variant', 'Name', 'Skill Points']
+                                            )
 
-        print("Converting (Variant, Name, Skill Points) dataframe to .csv format for users viewing.")
+        print("Converting (Base, Variant, Name, Skill Points) dataframe to .csv format for users viewing.")
 
         df_list_mech_name_sp.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs_SP.csv', index=False)
-
-        print("Converting list of owned 'Mechs to dataframe.")
-
-        # Convert list of owned 'mechs into a dataframe
-        df_owned_mechs = pd.DataFrame(owned_mechs, columns=['Owned \'Mechs'])
-
-        print("Converting dataframe of owned 'Mechs to dataframe to .csv format for users viewing")
-        print("Note that this .csv (owned_mechs.csv not owned_mechs_SP.csv) shows that you own at least "
-              "one copy of the 'Mech.")
-
-        # Create a .csv from the dataframe of owned 'mechs
-        df_owned_mechs.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs.csv', index=False)
 
         print("Your spreadsheets have been created! :D")
 except AttributeError:
