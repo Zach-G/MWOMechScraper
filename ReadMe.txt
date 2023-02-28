@@ -71,7 +71,7 @@ Now navigate to where you extracted the contents to and double-click main.py to 
 ************************************************************************************************************************
 Method 2,
 Head over to the latest release ( https://github.com/Zach-G/MWOMechScraper/releases/tag/v1.0.3 ) and scroll down to the
-bottom of the page. Click 'main.exe' and a download will begin. Once it is finished downloading you can simply run the
+bottom of the page. Click 'MWOMechScraper.exe' and a download will begin. Once it is finished downloading you can simply run the
 executable! Note that the .csv files the tool creates will be created in the same folder that the executable is run
 in. So if you don't cut/paste the executable to a folder then the .csv's will be created in your downloads folder.
 ************************************************************************************************************************
