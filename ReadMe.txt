@@ -38,11 +38,17 @@ You will need to download and install the latest version of Python.
     Steps to install Python:
         1) Open your web-browser and navigate to https://www.python.org/
         2) Navigate to Downloads and install the latest appropriate version based on the machine you are running on.
-        3) Double click the downloaded file and install for all users. Please ensure that Python is added to your path.
-           (This will ensure that you can use Python from any location in your file system)
-        4) Once installation is completed, select 'Disable path length limit' so that you can use more than 260 characters
-           in a file path.
-        5) Press the 'Close' button to end the installation.
+        3) Double click the downloaded file and install for all users. Please ensure that Python is added to your path 
+           via the little check box at the bottom of the installers initial page.
+           (This will ensure that you can use Python from any location in your file system and we will double check
+            that it was set up correctly.)
+        4) Left-Click the 'Customize Installation' button.
+        5) Left-Click the 'Next' button on the new screen that appeared.
+        6) Left-Click the box for 'Install Python for all users' so that it is marked with a check-mark.
+        7) Ensure that 'Add Python to environment variables' is checked with a check-mark.
+        8) Select an installation path (where you want Python to be saved on your PC).
+        9) Left-Click the 'Install' button.
+        10) After installation has completed, press the 'Close' button to end the installation.
 
 Next, you need to ensure that your PC understands where Python is located on your PC.
     Steps to set up your PATH environment to include Python, so you can run the script:
@@ -51,8 +57,8 @@ Next, you need to ensure that your PC understands where Python is located on you
         3) Left-click on the "Environment Variables" button on the bottom right.
         4) In the "System variables" section, select the "Path" variable and click "Edit". The next screen shows all
            directories that are currently associated with the PATH variable.
-        5) Left-click "New" and enter Python's install directory (The C: path to where Python was installed).
-           NOTE: Usually you can find the installed binary in this path location,
+        5) Left-click "New" and enter Python's install directory (The path to where Python was installed).
+           NOTE: Usually you can find the installed binary in this path location if you did not select a path,
                  C:\Users\AppData\Local\Programs\Python
 
 
