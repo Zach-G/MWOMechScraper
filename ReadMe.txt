@@ -81,8 +81,7 @@ mwomercs.com. Type in your email and password when prompted and now wait until y
 been created!
 
 The included .csv files are example outputs of what to expect and are the direct product of scraping my personal account.
-You may delete all included .csv files as they will be generated for you anyway when the program is run. If you choose
-not to delete them they will be overwritten with your 'Mech data.
+You may delete all included .csv files as they will be generated for you anyway when the program is run.
 
 If the tool is run via the .exe, the output .csv files will be created in whatever directory the .exe was run in
 (this will be the 'dist' folder if you didn't move the executable).
