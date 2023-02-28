@@ -229,6 +229,7 @@ try:
         list_mech_chass_name_SP = []
 
         print("Gathering owned 'Mechs variant, name, and number of equipped skill points.")
+        print("This may take a while, so please be patient.")
 
         for mech, mechID in dict_mechIDs.items():
             for i in mechID:
