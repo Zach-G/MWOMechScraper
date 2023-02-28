@@ -41,21 +41,31 @@ print("Please do not touch your keyboard while the program is working. Unless yo
 try:
     # Open a session
     with requests.session() as s:
+
         s.post(login_url, data=payload)
         r = s.get(profileMechStats_url)
         soup = BeautifulSoup(r.text, 'html.parser')
 
+        print("Log in successful.")
+
+        print("Gathering information on players mech stats on " + profileMechStats_url)
+
         # Obtain information from tag <table>
         mechs_table = soup.find('table', class_='table table-striped')
 
+        print("Gathering table headers.")
         # Collect the headers
         headers = []
         for i in mechs_table.find_all('th'):
             title = i.text
             headers.append(title)
 
+        print("Creating dataframe to hold data.")
+
         # Create the dataframe
         mech_data = pd.DataFrame(columns=headers)
+
+        print("Filling data frame with the table from " + profileMechStats_url)
 
         # Fill the dataframe
         for j in mechs_table.find_all('tr')[1:]:
@@ -64,6 +74,7 @@ try:
             length = len(mech_data)
             mech_data.loc[length] = row
 
+        print("Gathering player's in-game name to create customized save files.")
 
         # Get player profile name
         r2 = s.get(player_url)
@@ -71,17 +82,25 @@ try:
         playerprofilename = soup2.find('h1')
         playername = playerprofilename.text
 
+        print("Converting (unsorted) dataframe to .csv format for users viewing.")
+
         # Convert scraped data table to .csv
         mech_data.to_csv(cwd + "\\" + playername + "_" + 'mech_data_unsorted.csv', index=False)
 
+        print("Sorting 'Mechs by Time Played.")
+
         # ----------- Sort By Time Played -----------
         sorted_time_played = pd.read_csv(playername + "_" + 'mech_data_unsorted.csv')
+
+        print("Finding all 'Mechs with greater than 24 hours played.")
 
         # Find all 'mechs that have X>24 hours play time
         filtered = sorted_time_played[sorted_time_played['Time Played'].str.contains("day")]
 
         # List to store all converted times for 'mechs with X>24 hours play time
         times_to_add = []
+
+        print("Converting 'days' to 24 hours.")
 
         # Do calculations to show appropriate number of hours instead of "X day(s)"
         for k in filtered['Time Played']:
@@ -144,33 +163,40 @@ try:
         for b in range(len(mutated_times)):
             sorted_time_played.loc[sorted_time_played.index[b], 'Time Played'] = mutated_times[b]
 
+        print("Finished sorting by time played.")
+
+        print("Removing 'XP Earned' entry from dataframe.")
+
         # Remove column that offers no real beneficial information
         sorted_time_played.drop(columns=['XP Earned'], inplace=True)
 
+        print("Converting (sorted) time played dataframe to .csv format for users viewing.")
+
         # As the mech's were already previously sorted, and we have done no rearranging, simply output to .csv
         sorted_time_played.to_csv(cwd + "\\" + playername + "_" + 'mech_data_sorted_TP.csv', index=False)
+
+        print("Sorting 'Mechs by matches played.")
 
         # ---------- Sort by Matches Played ----------
         # Create .csv of mech's sorted by matches played.
         sorted_matches_played = pd.read_csv(playername + "_" + 'mech_data_unsorted.csv')
 
+        print("Removing 'Time Played' and 'XP Earned' entries from dataframe.")
+
         # Removed columns that offer no real beneficial information
         sorted_matches_played.drop(columns=['Time Played', 'XP Earned'], inplace=True)
 
         sorted_matches_played.sort_values(["Matches Played"], axis=0, ascending=False, inplace=True)
+
+        print("Converting (sorted) matches played dataframe to .csv format for users viewing.")
+
         sorted_matches_played.to_csv(cwd + "\\" + playername + "_" + 'mech_data_sorted_MP.csv', index=False)
+
+        print("Gathering information about player's owned 'Mechs "
+              "(Variant, Name, Skill Points) from players unique JSON")
 
         # ---------- Player Profile Scraper ----------
         response = s.get(collection_data_url)
-
-        # Create a file to store the raw data
-        file1 = open(cwd + '\\' + playername + "_" + 'mech_collection.json', 'w')
-
-        # Fill the file with the data for use
-        file1.writelines(response.text)
-
-        # Close the file to prevent memory mismanagement
-        file1.close()
 
         # A list container to store which 'mechs are owned
         owned_mechs = []
@@ -178,52 +204,69 @@ try:
         # A dictionary to contain 'Mech IDs and their skill nodes.
         dict_mechIDs = {}
 
-        with open(cwd + "\\" + playername + "_" + 'mech_collection.json') as f:
-            # Convert the JSON file into a python recognizable data format (I.E., Dict)
-            data = json.load(f)
-            collection = data['collection']
-            for collection_data in collection:
-                variants_data = collection_data['variants']
-                for specific_variant in variants_data:
-                    if variants_data[specific_variant]['owned'] is True:
-                        owned_mechs.append(variants_data[specific_variant]['display_name'])
+        # Old code for opening a JSON file stored on the machine. Keeping this here as a reminder for the
+        # offline version.
+        #with open(cwd + "\\" + playername + "_" + 'mech_collection.json') as f:
 
-                        # Store the list of mechIDs for a specific variant
-                        mechIDs = variants_data[specific_variant]['mech_ids']
+        print("Gathering all owned 'Mechs.")
 
-                        # Create an entry in the dictionary of 'Mechs to hold the list of mechIDs
-                        dict_mechIDs[variants_data[specific_variant]['display_name']] = mechIDs
+        # Convert the JSON text into a python recognizable data format (I.E., Dict)
+        data = json.loads(response.text)
+        collection = data['collection']
+        for collection_data in collection:
+            variants_data = collection_data['variants']
+            for specific_variant in variants_data:
+                if variants_data[specific_variant]['owned'] is True:
+                    owned_mechs.append(variants_data[specific_variant]['display_name'])
 
-            # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
-            list_mech_chass_name_SP = []
+                    # Store the list of mechIDs for a specific variant
+                    mechIDs = variants_data[specific_variant]['mech_ids']
 
-            for mech, mechID in dict_mechIDs.items():
-                for i in mechID:
-                    # We now have access to each individual 'mechs mechID.
+                    # Create an entry in the dictionary of 'Mechs to hold the list of mechIDs
+                    dict_mechIDs[variants_data[specific_variant]['display_name']] = mechIDs
 
-                    # ------------- Individual mech's skill point scraper ---------------
-                    # Create url of the specific 'Mech we want the information of
-                    spec_mech_url = collection_data_url + "/stats?mid[]=" + i
-                    response_spec_mech = s.get(spec_mech_url)
-                    dict_spec_mech = json.loads(response_spec_mech.text)
+        # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
+        list_mech_chass_name_SP = []
 
-                    for mech_chassis in dict_spec_mech['mechs']:
-                        mech_name = mech_chassis['name']
-                        spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
-                        list_mech_chass_name_SP.append((mech, mech_name, spec_mech_skills))
+        print("Gathering owned 'Mechs variant, name, and number of equipped skill points.")
 
-            # Convert list of tuples (mech variant, name, equipped skillpoints) into a dataframe.
-            df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Variant', 'Name', 'Skill Points'])
+        for mech, mechID in dict_mechIDs.items():
+            for i in mechID:
+                # We now have access to each individual 'mechs mechID.
 
-            df_list_mech_name_sp.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs_SP.csv', index=False)
+                # ------------- Individual mech's skill point scraper ---------------
+                # Create url of the specific 'Mech we want the information of
+                spec_mech_url = collection_data_url + "/stats?mid[]=" + i
+                response_spec_mech = s.get(spec_mech_url)
+                dict_spec_mech = json.loads(response_spec_mech.text)
 
-            # Convert list of owned 'mechs into a dataframe
-            df_owned_mechs = pd.DataFrame(owned_mechs, columns=['Owned \'Mechs'])
+                for mech_chassis in dict_spec_mech['mechs']:
+                    mech_name = mech_chassis['name']
+                    spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
+                    list_mech_chass_name_SP.append((mech, mech_name, spec_mech_skills))
 
-            # Create a .csv from the dataframe of owned 'mechs
-            df_owned_mechs.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs.csv', index=False)
+        print("Converting list of tuples (Variant, Name, Skillpoints) to data frame.")
 
-            print("Your spreadsheets have been created! :D")
+        # Convert list of tuples (mech variant, name, equipped skillpoints) into a dataframe.
+        df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Variant', 'Name', 'Skill Points'])
+
+        print("Converting (Variant, Name, Skill Points) dataframe to .csv format for users viewing.")
+
+        df_list_mech_name_sp.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs_SP.csv', index=False)
+
+        print("Converting list of owned 'Mechs to dataframe.")
+
+        # Convert list of owned 'mechs into a dataframe
+        df_owned_mechs = pd.DataFrame(owned_mechs, columns=['Owned \'Mechs'])
+
+        print("Converting dataframe of owned 'Mechs to dataframe to .csv format for users viewing")
+        print("Note that this .csv (owned_mechs.csv not owned_mechs_SP.csv) shows that you own at least "
+              "one copy of the 'Mech.")
+
+        # Create a .csv from the dataframe of owned 'mechs
+        df_owned_mechs.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs.csv', index=False)
+
+        print("Your spreadsheets have been created! :D")
 except AttributeError:
     print("Incorrect credentials supplied. The program failed to log in to mwomercs.com and find the appropriate "
           "tables.")
