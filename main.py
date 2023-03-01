@@ -204,9 +204,6 @@ try:
         # ---------- Player Profile Scraper ----------
         response = s.get(collection_data_url)
 
-        # A list container to store which 'mechs are owned
-        owned_mechs = []
-
         # A dictionary to contain 'Mech IDs and their skill nodes.
         dict_mechIDs = {}
 
@@ -223,8 +220,6 @@ try:
             variants_data = collection_data['variants']
             for specific_variant in variants_data:
                 if variants_data[specific_variant]['owned'] is True:
-                    owned_mechs.append(variants_data[specific_variant]['display_name'])
-
                     # Store the list of mechIDs for a specific variant
                     mechIDs = variants_data[specific_variant]['mech_ids']
 
@@ -256,7 +251,7 @@ try:
                     # Documentation on regex can be found at https://docs.python.org/3/library/re.html
                     # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                     # crafting of look-up tables.
-                    list_mech_chass_name_SP.append((re.sub("[\(\[].*?[\)\]]", "", mech), mech, mech_name, spec_mech_skills))
+                    list_mech_chass_name_SP.append((re.sub("[\(].*?[\)]", "", mech), mech, mech_name, spec_mech_skills))
 
         print("Converting list of tuples (Base, Variant, Name, Skillpoints) to data frame.")
 
