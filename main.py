@@ -247,8 +247,6 @@ try:
                     mech_name = mech_chassis['name']
                     spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
 
-                    # regex stolen from https://stackoverflow.com/a/14599280 because I am bad with regex.
-                    # Documentation on regex can be found at https://docs.python.org/3/library/re.html
                     # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                     # crafting of look-up tables.
                     list_mech_chass_name_SP.append((re.sub("[\(].*?[\)]", "", mech), mech, mech_name, spec_mech_skills))
