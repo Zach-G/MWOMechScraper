@@ -1,6 +1,18 @@
 # MWOMechScraper
 ## README
-This tool was developed by Zach Gherman to assist players to more easily view the 'Mechs they have played the most and have the most time piloting for the online video game MechWarriorOnline. This tool simply opens a session with the mwomercs.com webpage and navigates to the players profile mechstat page and scrapes data from the table available. It then compiles the data and transforms it into easy-to-read .csv (comma separated value) files {mech_data_unsorted.csv, mech_data_sorted_TP.csv, and mech_data_sorted_MP.csv}. The sorted .csv files list 'Mechs in descending order for quick and easy comprehension of what 'Mechs that player plays the most. MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Name is the name that the player has given the 'Mech in the Mechlab. The Number of Equipped Skill Points shows how skilled out a 'Mech is.
+This tool was developed by Zach Gherman to assist players to more easily view the 'Mechs they have played the most and have the most time piloting for the online video game [MechWarrior Online](https://mwomercs.com).
+
+This tool simply opens a session with the mwomercs.com webpage and navigates to the players profile mechstat page and scrapes data from the table available. It then compiles the data and transforms it into easy-to-read .csv (comma separated value) files:
+
+- mech_data_unsorted.csv
+
+- mech_data_sorted_TP.csv
+
+- and mech_data_sorted_MP.csv
+
+The sorted .csv files list 'Mechs in descending order for quick and easy comprehension of what 'Mechs that player plays the most.
+
+MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Name is the name that the player has given the 'Mech in the Mechlab. The Number of Equipped Skill Points shows how skilled out a 'Mech is.
 
 No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them send you their owned_mechs_SP.csv. Coalesce multiple players owned_mechs_SP.csvs to quickly and efficiently build your teams drop-deck based on what people already own!
 ---
