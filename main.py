@@ -30,15 +30,11 @@ try:
     if creds != "":
         match_e = re.search(r"^email=(.*)$", creds, re.MULTILINE)
         playeremail = match_e.group(1)
-        if playeremail == "":
-            playeremail = input("Please enter your email: ")
     
         match_p = re.search(r"^password=(.*)$", creds, re.MULTILINE)
         playerpassword = match_p.group(1)
-        if playerpassword == "":
-            print("Press Left-CTRL to reveal your password.")
-            playerpassword = maskpass.advpass()
 
+#if creds doesn't exist prompt user as normal
 except Exception:
     playeremail = input("Please enter your email: ")
 
