@@ -245,6 +245,16 @@ try:
               "https://mwomercs.com/mech-collection/data/stats?mid[]=<Individual 'Mechs MechID>")
         print("This may take a while, so please be patient.")
 
+        #also grab chassis data from the MechDB API - we have to lie about the user agent or we'll get blocked
+        url = "https://mwo.nav-alpha.com/api/mechs/"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer Z8YvyDlFEubyCYGbqtkaGMrfmAKuJwHOXaae3hxqbml1ytmww2qpeiKRgp97efG1",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0"
+        }
+        mechdb = requests.request("POST", url, headers=headers)
+        mechdata = mechdb.json()
+
         for mech, mechID in dict_mechIDs.items():
             for i in mechID:
                 # We now have access to each individual 'mechs mechID.
@@ -258,15 +268,19 @@ try:
                 for mech_chassis in dict_spec_mech['mechs']:
                     mech_name = mech_chassis['name']
                     spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
-
+                    for mechinfo in mechdata["data"]:
+                        if mechinfo['display_name'] == mech_name:
+                            mech_tonnage = mechinfo['tonnage']
+                            mech_faction = mechinfo['faction']
+                            mech_class = mechinfo['class']
                     # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                     # crafting of look-up tables.
-                    list_mech_chass_name_SP.append((re.sub("[\(].*?[\)]", "", mech), mech, mech_name, spec_mech_skills))
+                    list_mech_chass_name_SP.append((re.sub("[\(].*?[\)]", "", mech), mech, mech_name, mech_tonnage, mech_faction, mech_class, spec_mech_skills))
 
         print("Converting list of tuples (Base, Variant, Name, Skillpoints) to data frame.")
 
         # Convert list of tuples (mech variant, name, equipped skillpoints) into a dataframe.
-        df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Base', 'Variant', 'Name', 'Skill Points']
+        df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class', 'Skill Points']
                                             )
 
         print("Converting (Base, Variant, Name, Skill Points) dataframe to .csv format for users viewing.")
