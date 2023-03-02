@@ -95,7 +95,7 @@ try:
 
         # Get player profile name
         r2 = s.get(player_url)
-        soup2 = BeautifulSoup(r2.content, 'lxml')
+        soup2 = BeautifulSoup(r2.content, 'html.parser')
         playerprofilename = soup2.find('h1')
         playername = playerprofilename.text
 
