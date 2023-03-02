@@ -56,7 +56,7 @@ Here are the steps to set up your PATH environment to include Python, so you can
 1. Left-click the Windows button on your taskbar then right-click "This PC" and select "Properties".
 2. Look for "Advanced system settings" on the window that pops up and left-click it.
 3. Left-click on the "Environment Variables" button on the bottom right.
-4. In the "System variables" section, select the "Path" variable and click "Edit". The next screen shows all. directories that are currently associated with the PATH variable.
+4. In the "System variables" section, select the "Path" variable and click "Edit". The next screen shows all directories that are currently associated with the PATH variable.
 5. Left-click "New" and enter Python's install directory (The path to where Python was installed).
 
 **NOTE**: Usually you can find the installed binary in this path location if you did not select a path, like `%APPDATA%\Local\Programs\Python`
@@ -96,4 +96,7 @@ Thank you Tarogato for being a guinea pig and helping me test this tool via atte
 
 A big thank you to Woodrick for asking that this tool be developed.
 
+Thank you Grinny for cleaning up my horrible README and the root directory.
+- Adding the gitignore
+- Adding the requirements.txt
 (grinny was here, Hail Cargonia)
