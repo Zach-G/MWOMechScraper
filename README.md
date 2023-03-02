@@ -15,6 +15,7 @@ The sorted .csv files list 'Mechs in descending order for quick and easy compreh
 MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Name is the name that the player has given the 'Mech in the Mechlab. The Number of Equipped Skill Points shows how skilled out a 'Mech is.
 
 No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them send you their owned_mechs_SP.csv. Coalesce multiple players owned_mechs_SP.csvs to quickly and efficiently build your teams drop-deck based on what people already own!
+
 ---
 
 ## IMPORTANT
@@ -58,13 +59,13 @@ Here are the steps to set up your PATH environment to include Python, so you can
 4. In the "System variables" section, select the "Path" variable and click "Edit". The next screen shows all. directories that are currently associated with the PATH variable.
 5. Left-click "New" and enter Python's install directory (The path to where Python was installed).
 
-**NOTE**: Usually you can find the installed binary in this path location if you did not select a path, like `C:\Users\AppData\Local\Programs\Python`
+**NOTE**: Usually you can find the installed binary in this path location if you did not select a path, like `%APPDATA%\Local\Programs\Python`
 
 ### Get the library dependencies
 Next, you will need the libraries associated with the script.
 Open the Command Prompt and type the following commands:
 
-```python
+```sh
 python -m pip install BeautifulSoup4
 python -m pip install requests
 python -m pip install pandas
@@ -84,6 +85,8 @@ click on it, select 'Download ZIP', and extract the contents of the .zip file to
 
 Now navigate to where you extracted the contents to and double-click main.py to run the script.
 
+## Thanks / Contributors
+
 Thank you Tarogato for being a guinea pig and helping me test this tool via attempting to follow the README.
 - Including Python to Path environment
 - Updating command prompt pip commands
@@ -92,3 +95,5 @@ Thank you Tarogato for being a guinea pig and helping me test this tool via atte
 - Pointing out redundancies and suggesting additions to owned_mechs_SP.csv
 
 A big thank you to Woodrick for asking that this tool be developed.
+
+(grinny was here, Hail Cargonia)
