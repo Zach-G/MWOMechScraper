@@ -1,6 +1,7 @@
 # Imports
 import json
 import re
+from pathlib import Path
 
 import pandas as pd
 import requests
@@ -23,11 +24,22 @@ player_url = 'https://mwomercs.com/profile'
 cwd = os.getcwd()
 
 # Gather user credentials
-playeremail = input("Please enter your email: ")
+# Attempt to load from creds.txt
+try:
+    creds = Path("creds.txt").read_text()
+    if creds != "":
+        match_e = re.search(r"^email=(.*)$", creds, re.MULTILINE)
+        playeremail = match_e.group(1)
+    
+        match_p = re.search(r"^password=(.*)$", creds, re.MULTILINE)
+        playerpassword = match_p.group(1)
 
-print("Press Left-CTRL to reveal your password.")
+#if creds doesn't exist prompt user as normal
+except Exception:
+    playeremail = input("Please enter your email: ")
 
-playerpassword = maskpass.advpass()
+    print("Press Left-CTRL to reveal your password.")
+    playerpassword = maskpass.advpass()
 
 
 # Player's Credentials to be used on log-in
@@ -90,7 +102,7 @@ try:
         print("Converting (unsorted) dataframe to .csv format for users viewing.")
 
         # Convert scraped data table to .csv
-        mech_data.to_csv(cwd + "\\" + playername + "_" + 'mech_data_unsorted.csv', index=False)
+        mech_data.to_csv(cwd + os.sep + playername + "_" + 'mech_data_unsorted.csv', index=False)
 
         print("Sorting 'Mechs by Time Played.")
 
@@ -178,7 +190,7 @@ try:
         print("Converting (sorted) time played dataframe to .csv format for users viewing.")
 
         # As the mech's were already previously sorted, and we have done no rearranging, simply output to .csv
-        sorted_time_played.to_csv(cwd + "\\" + playername + "_" + 'mech_data_sorted_TP.csv', index=False)
+        sorted_time_played.to_csv(cwd + os.sep + playername + "_" + 'mech_data_sorted_TP.csv', index=False)
 
         print("Sorting 'Mechs by matches played.")
 
@@ -195,7 +207,7 @@ try:
 
         print("Converting (sorted) matches played dataframe to .csv format for users viewing.")
 
-        sorted_matches_played.to_csv(cwd + "\\" + playername + "_" + 'mech_data_sorted_MP.csv', index=False)
+        sorted_matches_played.to_csv(cwd + os.sep + playername + "_" + 'mech_data_sorted_MP.csv', index=False)
 
         print("Gathering information about player's owned 'Mechs "
               "(Variant, Name, Skill Points) from players unique JSON located at "
@@ -209,7 +221,7 @@ try:
 
         # Old code for opening a JSON file stored on the machine. Keeping this here as a reminder for the
         # offline version.
-        #with open(cwd + "\\" + playername + "_" + 'mech_collection.json') as f:
+        #with open(cwd + os.sep + playername + "_" + 'mech_collection.json') as f:
 
         print("Gathering all owned 'Mechs.")
 
@@ -259,7 +271,7 @@ try:
 
         print("Converting (Base, Variant, Name, Skill Points) dataframe to .csv format for users viewing.")
 
-        df_list_mech_name_sp.to_csv(cwd + "\\" + playername + "_" + 'owned_mechs_SP.csv', index=False)
+        df_list_mech_name_sp.to_csv(cwd + os.sep + playername + "_" + 'owned_mechs_SP.csv', index=False)
 
         print("Your spreadsheets have been created! :D")
 except AttributeError:
