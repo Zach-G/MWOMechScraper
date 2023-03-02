@@ -99,4 +99,6 @@ A big thank you to Woodrick for asking that this tool be developed.
 Thank you Grinny for cleaning up my horrible README and the root directory.
 - Adding the gitignore
 - Adding the requirements.txt
-(grinny was here, Hail Cargonia)
+- (grinny was here, Hail Cargonia)
+
+Thank you Bak3y for providing a way for users to use a creds.txt so that users do not need to enter their credentials every time and for fixing an os path bug for Linux machines.
