@@ -253,7 +253,11 @@ try:
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0"
         }
         mechdb = requests.request("POST", url, headers=headers)
-        mechdata = mechdb.json()
+        if mechdb.status_code == 200:
+            mechdata = mechdb.json()
+        else:
+            print("Unable to load extra data from MechDB. Continuing.")
+            mechdata = ""
 
         for mech, mechID in dict_mechIDs.items():
             for i in mechID:
@@ -268,11 +272,16 @@ try:
                 for mech_chassis in dict_spec_mech['mechs']:
                     mech_name = mech_chassis['name']
                     spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
-                    for mechinfo in mechdata["data"]:
-                        if mechinfo['display_name'] == mech_name:
-                            mech_tonnage = mechinfo['tonnage']
-                            mech_faction = mechinfo['faction']
-                            mech_class = mechinfo['class']
+                    if mechdata != "":
+                        for mechinfo in mechdata["data"]:
+                            if mechinfo['display_name'] == mech:
+                                mech_tonnage = mechinfo['tonnage']
+                                mech_faction = mechinfo['faction']
+                                mech_class = mechinfo['class']
+                    else:
+                        mech_tonnage = "--"
+                        mech_faction = "--"
+                        mech_class = "--"
                     # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                     # crafting of look-up tables.
                     list_mech_chass_name_SP.append((re.sub("[\(].*?[\)]", "", mech), mech, mech_name, mech_tonnage, mech_faction, mech_class, spec_mech_skills))
