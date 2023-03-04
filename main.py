@@ -210,7 +210,7 @@ try:
         sorted_matches_played.to_csv(cwd + os.sep + playername + "_" + 'mech_data_sorted_MP.csv', index=False)
 
         print("Gathering information about player's owned 'Mechs "
-              "(Variant, Name, Skill Points) from players unique JSON located at "
+              "(Variant, mechID) from players unique JSON located at "
               "https://mwomercs.com/mech-collection/data")
 
         # ---------- Player Profile Scraper ----------
@@ -241,8 +241,9 @@ try:
         # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
         list_mech_chass_name_SP = []
 
-        print("Gathering owned 'Mechs base, variant, name, and number of equipped skill points from "
+        print("Gathering owned 'Mech user defined name, and number of equipped skill points from "
               "https://mwomercs.com/mech-collection/data/stats?mid[]=<Individual 'Mechs MechID>")
+        print("Gathering additional 'Mech information (Tonnage, Faction, Class) from mechDB API.")
         print("This may take a while, so please be patient.")
 
         #also grab chassis data from the MechDB API - we have to lie about the user agent or we'll get blocked
@@ -286,13 +287,13 @@ try:
                     # crafting of look-up tables.
                     list_mech_chass_name_SP.append((re.sub("[\(].*?[\)]", "", mech), mech, mech_name, mech_tonnage, mech_faction, mech_class, spec_mech_skills))
 
-        print("Converting list of tuples (Base, Variant, Name, Skillpoints) to data frame.")
+        print("Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, Class, Skillpoints) to data frame.")
 
         # Convert list of tuples (mech variant, name, equipped skillpoints) into a dataframe.
         df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP, columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class', 'Skill Points']
                                             )
 
-        print("Converting (Base, Variant, Name, Skill Points) dataframe to .csv format for users viewing.")
+        print("Converting (Base, Variant, User Defined Name, Tonnage, Faction, Class, Skill Points) dataframe to .csv format for users viewing.")
 
         df_list_mech_name_sp.to_csv(cwd + os.sep + playername + "_" + 'owned_mechs_SP.csv', index=False)
 
