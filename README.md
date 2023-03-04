@@ -103,3 +103,5 @@ Thank you Grinny for cleaning up my horrible README and the root directory.
 
 Thank you Bak3y for providing a way for users to use a creds.txt so that users do not need to enter their credentials every time and for fixing an os path bug for Linux machines.
 - Adding mechDB API to gather Tonnage, Faction, and Weight Class.
+
+Thank you K2B for creating and maintaining mechDB! This tool would be incomplete without your API!
