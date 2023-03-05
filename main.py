@@ -50,9 +50,11 @@ def gatherlogincreds():
 
 # A function for gathering the user's in-game player name.
 def gatheruser_ign(session):
+    print("Attempting to gather user's in-game name to create customized save files.")
     r = session.get(player_url)
     soup = BeautifulSoup(r.content, 'html.parser')
     player_ign = soup.find('h1')
+    print("Finished gathering users in-game name.")
     return player_ign.text
 
 
@@ -74,6 +76,7 @@ def unsorted_filldataframehelper(table, dataframe):
         row = [i.text for i in row_data]
         length = len(dataframe)
         dataframe.loc[length] = row
+    print("Finished gathering information at " + profileMechStats_url + " and filling the dataframe.")
 
 
 # A function to return the table found within the html text of the 'Mech Stats page.
@@ -102,6 +105,8 @@ def unsorted_dataframehelper(htmltext, user):
 
 # A function to scrape the 'Mech Stats table on the user's profile 'Mech Stats page.
 def unsortedmechstats(session, user):
+    print("Attempting to gather information on players 'Mech stats at " + profileMechStats_url)
+    print("This may take a minute, so please be patient.")
     r = session.get(profileMechStats_url)
     soup = BeautifulSoup(r.text, 'html.parser')
     unsorted_dataframehelper(soup, user)
@@ -109,19 +114,21 @@ def unsortedmechstats(session, user):
 
 # A function to sort the unsorted 'Mech Stats by time played.
 def sortedmechstats_tp(user):
-    print("Begin sorting by time played.")
+    print("Now attempting to sort 'Mechs by Time Played.")
+    print("Loading data from unsorted csv file.")
     # Create a copy of the unsorted data to be sorted.
     sorted_time_played = pd.read_csv(user + "_" + 'mech_data_unsorted.csv')
 
     # Find all 'Mechs that have X>24 hours play time.
-    print("Finding all 'Mechs with greater than 24 hours played.")
+    print("Filtering out all 'Mechs with greater than 24 hours played.")
     filtered = sorted_time_played[sorted_time_played['Time Played'].str.contains("day")]
+    print("Finished filtering out all 'Mechs with greater than 24 hours played.")
 
     # List to store all converted times for 'Mechs with X>24 hours play time
     times_to_add = []
 
     # Do calculations to show appropriate number of hours instead of "X day(s)"
-    print("Converting 'days' to 24 hours.")
+    print("Converting 'days' to 24 * (number of days); to get total number of hours played for filtered 'Mechs.")
     for k in filtered['Time Played']:
         time = k.split(' ')
         hours_to_add = 24 * int(time[0])
@@ -131,10 +138,13 @@ def sortedmechstats_tp(user):
         hours = hours_to_add + int(hms[0])
         hms = str(hours) + ':' + hms[1] + ':' + hms[2]
         times_to_add.append(hms)
+    print("Finished converting 'days' to hours.")
 
     # Change the Time Played strings of the 'mechs with X>24 hours time played to the calculated amount
+    print("Converting filtered 'Mechs Time Played entry with the converted days to hours.")
     for x in range(len(times_to_add)):
         sorted_time_played.loc[filtered.index[x], 'Time Played'] = times_to_add[x]
+    print("Finished converting filtered 'Mechs Time Played entry with the converted days to hours.")
 
     # List to store all 'mechs time played
     allHMS = []
@@ -150,13 +160,16 @@ def sortedmechstats_tp(user):
         sorted_time_played.loc[sorted_time_played.index[z], 'Time Played'] = allHMS[z]
 
     # Sort the Time Played column by the integer values in descending order
+    print("Sorting by Time Played entries of 'Mechs.")
     sorted_time_played = sorted_time_played.sort_values(['Time Played'], axis=0, ascending=False)
+    print("Finished sorting by Time Played.")
 
     # List to store our conversion from integer back to string with the appropriate format
     mutated_times = []
 
     # Convert integers to string in the correct format
     # I got lazy and tired. Went with ugly brute-forced code to reformat the time back to H:M:S
+    print("Reformatting Time Played to an easier-to-read format.")
     for a in sorted_time_played['Time Played']:
         mtime = str(a)
         if len(mtime) == 1:
@@ -177,12 +190,13 @@ def sortedmechstats_tp(user):
             hours = mtime[:-4]
             mtime = hours + ':' + minutes + ':' + seconds
         mutated_times.append(mtime)
+    print("Finished reformatting Time Played to an easier-to-read format.")
 
     # Change the Time Played Integers to the Strings we just built.
+    print("Storing the easier-to-read to the Time Played column of the dataframe.")
     for b in range(len(mutated_times)):
         sorted_time_played.loc[sorted_time_played.index[b], 'Time Played'] = mutated_times[b]
-
-    print("Finished sorting by time played.")
+    print("Finished storing the easier-to-read entries to the Time Played column of the dataframe.")
 
     # Remove column that offers no real beneficial information
     print("Removing 'XP Earned' entry from dataframe.")
@@ -195,25 +209,34 @@ def sortedmechstats_tp(user):
 
 # A function for sorting the unsorted 'Mech stats by matches played.
 def sortedmechstats_mp(user_ign):
-    print("Begin sorting by matches played.")
+    print("Now attempting to sort 'Mechs by matches played.")
+    print("Loading data from unsorted .csv file to dataframe.")
     # Create dataframe of mech's sorted by matches played.
     sorted_matches_played = pd.read_csv(user_ign + "_" + 'mech_data_unsorted.csv')
+    print("Finished loading the unsorted data to dataframe.")
 
     # Removed columns that offer no real beneficial information
     print("Removing 'Time Played' and 'XP Earned' entries from dataframe.")
     sorted_matches_played.drop(columns=['Time Played', 'XP Earned'], inplace=True)
+    print("Finished removing the 'Time Played' and 'XP Earned' columns from the dataframe.")
 
     # Sort by the values stored in the Matches Played column.
+    print("Sorting dataframe entries by Matches Played.")
     sorted_matches_played.sort_values(["Matches Played"], axis=0, ascending=False, inplace=True)
+    print("Finished sorting dataframe entries by Matches Played.")
 
-    print("Converting (sorted) matches played dataframe to .csv format for users viewing.")
+    print("Converting (sorted) Matches Played dataframe to .csv format for users viewing.")
     sorted_matches_played.to_csv(cwd + os.sep + user_ign + "_" + 'mech_data_sorted_MP.csv', index=False)
+    print("Finished converting Matches Played dataframe to .csv format.")
 
 
 # A function for gathering information about the user's owned 'Mechs.
 def playerownedmechstats(session, user_ign):
-    print("Begin gathering all player owned 'Mechs.")
+    print("Attempting to gather information about player's owned 'Mechs "
+          "(Variant, mechID) from players unique JSON located at "
+          "https://mwomercs.com/mech-collection/data")
     # Access the JSON that contains all the players 'Mech variant information at collection_data_url.
+    print("Opening session with " + collection_data_url)
     response = session.get(collection_data_url)
 
     # A dictionary to contain 'Mech IDs and their skill nodes.
@@ -224,7 +247,7 @@ def playerownedmechstats(session, user_ign):
     # with open(cwd + os.sep + playername + "_" + 'mech_collection.json') as f:
 
     # Convert the JSON text into a python recognizable data format (I.E., Dict)
-    print("Loading players 'Mech Collectin JSON.")
+    print("Loading players 'Mech Collection JSON.")
     data = json.loads(response.text)
     collection = data['collection']
     print("Parsing the JSON and gathering all owned 'Mechs Variants and associated mechIDs.")
@@ -256,6 +279,7 @@ def playerownedmechstats(session, user_ign):
     }
     mechdb = requests.request("POST", url, headers=headers)
     if mechdb.status_code == 200:
+        print("Loading additional data from MechDB.")
         mechdata = mechdb.json()
     else:
         print("Unable to load extra data from MechDB. Continuing.")
@@ -288,6 +312,7 @@ def playerownedmechstats(session, user_ign):
                 # crafting of look-up tables.
                 list_mech_chass_name_SP.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mechname, mech_tonnage,
                                                 mech_faction, mech_class, spec_mech_skills))
+            print("Finished gathering information about player's owned 'Mechs.")
 
     # Convert list of tuples (mech variant, name, equipped skill points) into a dataframe.
     print("Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, Skill "
@@ -318,31 +343,19 @@ def main():
             print("Log in successful.")
 
             # Get player profile name
-            print("Gathering player's in-game name to create customized save files.")
             playername = gatheruser_ign(s)
-            print("Finished gathering users in-game name.")
 
-            print("Gathering information on players 'Mech stats on " + profileMechStats_url)
-            print("This may take a minute, so please be patient.")
+            # Get unsorted table of 'Mech stats and create a .csv of it.
             unsortedmechstats(s, playername)
-            print("Finished gathering information on " + profileMechStats_url)
 
-            # ----------- Sort By Time Played -----------
-            print("Sorting 'Mechs by Time Played.")
+            # ---------- Sort By Time Played ----------
             sortedmechstats_tp(playername)
-            print("Finished sorting by Time Played.")
 
             # ---------- Sort by Matches Played ----------
-            print("Sorting 'Mechs by matches played.")
             sortedmechstats_mp(playername)
-            print("Finished sorting by Matches Played.")
 
-            # ---------- Player Profile Scraper ----------
-            print("Gathering information about player's owned 'Mechs "
-                  "(Variant, mechID) from players unique JSON located at "
-                  "https://mwomercs.com/mech-collection/data")
+            # ---------- Players Owned 'Mechs ----------
             playerownedmechstats(s, playername)
-            print("Finished gathering information about player's owned 'Mechs.")
 
             print("Your spreadsheets have been created! :D")
     except AttributeError:
