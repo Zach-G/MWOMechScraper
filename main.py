@@ -27,7 +27,7 @@ cwd = os.getcwd()
 def gatherlogincreds():
     # Attempt to load from creds.txt
     try:
-        print("Attempting to find credentials file creds.txt.")
+        print("Attempting to find credentials file, creds.txt.")
         creds = Path("creds.txt").read_text()
         if creds != "":
             match_e = re.search(r"^email=(.*)$", creds, re.MULTILINE)
@@ -195,7 +195,8 @@ def sortedmechstats_mp(user_ign):
 
 # A function for gathering information about the user's owned 'Mechs.
 def playerownedmechstats(session, user_ign):
-
+    print("Begin gathering all player owned 'Mechs.")
+    # Access the JSON that contains all the players 'Mech variant information at collection_data_url.
     response = session.get(collection_data_url)
 
     # A dictionary to contain 'Mech IDs and their skill nodes.
@@ -205,11 +206,11 @@ def playerownedmechstats(session, user_ign):
     # offline version.
     # with open(cwd + os.sep + playername + "_" + 'mech_collection.json') as f:
 
-    print("Gathering all owned 'Mechs.")
-
     # Convert the JSON text into a python recognizable data format (I.E., Dict)
+    print("Loading players 'Mech Collectin JSON.")
     data = json.loads(response.text)
     collection = data['collection']
+    print("Parsing the JSON and gathering all owned 'Mechs Variants and associated mechIDs.")
     for collection_data in collection:
         variants_data = collection_data['variants']
         for specific_variant in variants_data:
@@ -219,6 +220,7 @@ def playerownedmechstats(session, user_ign):
 
                 # Create an entry in the dictionary of 'Mechs to hold the list of mechIDs
                 dict_mechIDs[variants_data[specific_variant]['display_name']] = mechIDs
+    print("Finished parsing and gathering all owned 'Mech Variants and their associated mechIDs.")
 
     # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
     list_mech_chass_name_SP = []
@@ -253,7 +255,7 @@ def playerownedmechstats(session, user_ign):
             dict_spec_mech = json.loads(response_spec_mech.text)
 
             for mech_chassis in dict_spec_mech['mechs']:
-                mech_name = mech_chassis['name']
+                mechlab_mechname = mech_chassis['name']
                 spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
                 if mechdata != "":
                     for mechinfo in mechdata["data"]:
@@ -267,20 +269,19 @@ def playerownedmechstats(session, user_ign):
                     mech_class = "--"
                 # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                 # crafting of look-up tables.
-                list_mech_chass_name_SP.append((re.sub("[(].*?[)]", "", mech), mech, mech_name, mech_tonnage,
+                list_mech_chass_name_SP.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mechname, mech_tonnage,
                                                 mech_faction, mech_class, spec_mech_skills))
 
+    # Convert list of tuples (mech variant, name, equipped skill points) into a dataframe.
     print("Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, Skill "
           "Points) to data frame.")
-
-    # Convert list of tuples (mech variant, name, equipped skill points) into a dataframe.
     df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_SP,
                                         columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class',
                                                  'Skill Points'])
 
+    # Convert dataframe to csv file.
     print("Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, Skill Points) "
           "dataframe to .csv format for users viewing.")
-
     df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
 
 
