@@ -30,6 +30,7 @@ def gatherlogincreds():
         print("Attempting to find credentials file, creds.txt.")
         creds = Path("creds.txt").read_text()
         if creds != "":
+            print("creds.txt found.")
             match_e = re.search(r"^email=(.*)$", creds, re.MULTILINE)
             playeremail = match_e.group(1)
 
@@ -55,39 +56,55 @@ def gatheruser_ign(session):
     return player_ign.text
 
 
-# A function to scrape the 'Mech Stats table on the user's profile 'Mech Stats page.
-def unsortedmechstats(session, user):
-    r = session.get(profileMechStats_url)
-    soup = BeautifulSoup(r.text, 'html.parser')
-
-    # Obtain information from tag <table>
-    mechs_table = soup.find('table', class_='table table-striped')
-
-    # Collect the headers
+# A helper function to find and return the list of headers from the supplied table of 'Mech Stats.
+def unsorted_headerhelper(table):
     # list to store headers of the table from the HTML from profileMechStats_url.
     headers = []
     print("Gathering table headers.")
-    for i in mechs_table.find_all('th'):
+    for i in table.find_all('th'):
         title = i.text
         headers.append(title)
+    return headers
 
-    print("Creating dataframe to hold data.")
 
-    # Create the dataframe
-    mech_data = pd.DataFrame(columns=headers)
-
-    print("Filling data frame with the table from " + profileMechStats_url)
-
-    # Fill the dataframe
-    for j in mechs_table.find_all('tr')[1:]:
+# A function to fill the unsorted 'Mech Stats dataframe.
+def unsorted_filldataframehelper(table, dataframe):
+    for j in table.find_all('tr')[1:]:
         row_data = j.find_all('td')
         row = [i.text for i in row_data]
-        length = len(mech_data)
-        mech_data.loc[length] = row
+        length = len(dataframe)
+        dataframe.loc[length] = row
+
+
+# A function to return the table found within the html text of the 'Mech Stats page.
+def unsorted_htmltablehelper(htmltext):
+    # Obtain information from tag <table>
+    return htmltext.find('table', class_='table table-striped')
+
+
+# A function to set up the unsorted 'Mech stats dataframe and create it's .csv file.
+def unsorted_dataframehelper(htmltext, user):
+    # Create the dataframe
+    print("Creating dataframe to hold data.")
+    mech_data = pd.DataFrame(columns=unsorted_headerhelper(unsorted_htmltablehelper(htmltext)))
+    print("Finished setting up dataframe.")
+
+    # Fill the dataframe
+    print("Filling dataframe with the table from " + profileMechStats_url)
+    unsorted_filldataframehelper(unsorted_htmltablehelper(htmltext), mech_data)
+    print("Finished filling the dataframe.")
 
     # Convert scraped data table to .csv
     print("Converting (unsorted) dataframe to .csv format for users viewing.")
     mech_data.to_csv(cwd + os.sep + user + "_" + 'mech_data_unsorted.csv', index=False)
+    print("Finished converting dataframe to .csv format.")
+
+
+# A function to scrape the 'Mech Stats table on the user's profile 'Mech Stats page.
+def unsortedmechstats(session, user):
+    r = session.get(profileMechStats_url)
+    soup = BeautifulSoup(r.text, 'html.parser')
+    unsorted_dataframehelper(soup, user)
 
 
 # A function to sort the unsorted 'Mech Stats by time played.
@@ -306,6 +323,7 @@ def main():
             print("Finished gathering users in-game name.")
 
             print("Gathering information on players 'Mech stats on " + profileMechStats_url)
+            print("This may take a minute, so please be patient.")
             unsortedmechstats(s, playername)
             print("Finished gathering information on " + profileMechStats_url)
 
