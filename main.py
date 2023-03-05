@@ -230,8 +230,25 @@ def sortedmechstats_mp(user_ign):
     print("Finished converting Matches Played dataframe to .csv format.")
 
 
+# A function to return the JSON from mechDB if a successful request was made.
+def mechdbhelper():
+    url = "https://mwo.nav-alpha.com/api/mechs/"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer Z8YvyDlFEubyCYGbqtkaGMrfmAKuJwHOXaae3hxqbml1ytmww2qpeiKRgp97efG1",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0"
+    }
+    mechdb = requests.request("POST", url, headers=headers)
+    if mechdb.status_code == 200:
+        print("Loading additional data from MechDB.")
+        return mechdb.json()
+    else:
+        print("Unable to load extra data from MechDB. Continuing.")
+        return ""
+
+
 # A function for gathering information about the user's owned 'Mechs.
-def playerownedmechstats(session, user_ign):
+def playerownedmechsinfo(session, user_ign):
     print("Attempting to gather information about player's owned 'Mechs "
           "(Variant, mechID) from players unique JSON located at "
           "https://mwomercs.com/mech-collection/data")
@@ -271,19 +288,7 @@ def playerownedmechstats(session, user_ign):
     print("This may take a while, so please be patient.")
 
     # also grab chassis data from the MechDB API - we have to lie about the user agent or we'll get blocked
-    url = "https://mwo.nav-alpha.com/api/mechs/"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer Z8YvyDlFEubyCYGbqtkaGMrfmAKuJwHOXaae3hxqbml1ytmww2qpeiKRgp97efG1",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0"
-    }
-    mechdb = requests.request("POST", url, headers=headers)
-    if mechdb.status_code == 200:
-        print("Loading additional data from MechDB.")
-        mechdata = mechdb.json()
-    else:
-        print("Unable to load extra data from MechDB. Continuing.")
-        mechdata = ""
+    mechdata = mechdbhelper()
 
     for mech, mechID in dict_mechIDs.items():
         for i in mechID:
@@ -312,7 +317,7 @@ def playerownedmechstats(session, user_ign):
                 # crafting of look-up tables.
                 list_mech_chass_name_SP.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mechname, mech_tonnage,
                                                 mech_faction, mech_class, spec_mech_skills))
-            print("Finished gathering information about player's owned 'Mechs.")
+    print("Finished gathering information about player's owned 'Mechs.")
 
     # Convert list of tuples (mech variant, name, equipped skill points) into a dataframe.
     print("Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, Skill "
@@ -355,7 +360,7 @@ def main():
             sortedmechstats_mp(playername)
 
             # ---------- Players Owned 'Mechs ----------
-            playerownedmechstats(s, playername)
+            playerownedmechsinfo(s, playername)
 
             print("Your spreadsheets have been created! :D")
     except AttributeError:
