@@ -702,7 +702,7 @@ def main():
     label_text += "or 'Mech scraper. The message box below will display the status of the tool\n"
     label_text += "as it runs. If the file \"creds.txt\" is not found within the same folder\n"
     label_text += "containing the tool when the online version is ran, you will be prompted\n"
-    label_text += "for your email and password."
+    label_text += "for your email and password.\n"
     label_text += "If the offline version(s) are ran, it will prompt you for your in-game name\n"
     label_text += "to properly name the .CSV files.\n"
     label_text += "NOTE: To run the offline Mech scraper it is suggested to first update your offline\n"
