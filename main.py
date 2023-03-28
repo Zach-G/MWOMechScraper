@@ -691,7 +691,7 @@ def main():
     # Create the GUI
     root = tk.Tk()
     root.title("MechWarriorOnline Mech Scraper")
-    root.geometry("920x720")
+    root.geometry("768x720")
 
     # Label to explain a little about how to use MWOMechScraper
     label_text = "Welcome to the MechWarriorOnline Mech Scraper!\n\n"
