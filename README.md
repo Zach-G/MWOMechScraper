@@ -12,7 +12,7 @@ This tool simply opens a session with the mwomercs.com webpage and navigates to 
 
 The sorted .csv files list 'Mechs in descending order for quick and easy comprehension of what 'Mechs that player plays the most.
 
-MWOMechScraper now also spits out another .csv which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Tonnage, Faction, Weight Class, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Name is the name that the player has given the 'Mech in the Mechlab. The Number of Equipped Skill Points shows how skilled out a 'Mech is.
+MWOMechScraper now also spits out another .csv (owned_mechs_SP.csv) which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Tonnage, Faction, Weight Class, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Variant denotes the actual variant of the 'Mech (E.G., SDR-5D(P)). The Name is the name that the player has given the 'Mech in the Mechlab. The Tonnage is the amount of Tons the 'Mech is. The Faction details which faction the 'Mech is (I.E., Clan or Inner Sphere). The Weight Class details the size of the 'Mech (Light, Medium, Heavy, Assault). The Number of Equipped Skill Points shows how skilled out a 'Mech is.
 
 No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them send you their owned_mechs_SP.csv. Coalesce multiple players owned_mechs_SP.csvs to quickly and efficiently build your teams drop-deck based on what people already own!
 
@@ -25,10 +25,10 @@ Please, feel free to review the code yourself and ensure that the only addresses
 ## HOW TO USE
 To run this tool simply download and run the executable located in https://github.com/Zach-G/MWOMechScraper/releases. Just scroll down to the bottom of the page, click 'MWOMechScraper.exe' and the download will begin. The tool will then be residing in your 'downloads' folder. Please note that MWOMechScraper will create the csv files in whatever folder it is contained in. I.E, If you run the tool from your downloads folder, it will generate the csv files in your downloads folder.
 
-Again, the tool will prompt you for the email and password that you use for mwomercs.com. Type in your email and password when prompted and now wait until your personal .csv files have been created!
+Again, the tool will prompt you for the email and password that you use for [MWO](https://mwomercs.com/) if you select the buttons labeled "Online". Type in your email and password into the terminal when prompted and now wait until your personal .CSV files have been created!
 
-## Offline Version WIP
-I will work on an "offline" version in which players can send their HTML's to someone to have the .CSVs created. This however will require more effort from the users as they will need to ensure that they load all the data on their profile page by hovering their mouse over each individual 'Mech they own before exporting the HTML. This is because the data is grabbed from the website using GET requests to the player's unique JSON once the player hovers over the owned 'Mech. Without the GET requests, the HTML is incomplete and grabbing the Mech names and number of skill points equipped to each individual 'Mech is impossible.
+## Offline Version
+The "Offline" buttons allow for the user to choose HTML files containing the information they wish to scrape. To get the 'Mech tonnage, we still require an internet connection to make a request to the [MechDB API](https://mwo.nav-alpha.com/api/mechs/) to then store a local version of the database on the user's machine. If a user does not wish to press the "Update Offline MechDB" button, the values for tonnage associated with their 'Mechs in the .CSV Files will be "--". For the "Offline Stat Scraper" button to work, the player must first log into [MWOMercs](https://mwomercs.com/) and navigate to their profiles 'Mech Stats page (Profile->Stats->Mech Stats) then save a copy of the HTML by right-clicking on the website page, selecting "Save Page As...", and saving the page with the ".html" extension. For the "Offline Mech Scraper" button to work, the user must first log into [MWOMercs](https://mwomercs.com/) and navigate to their Profile. Next they must mouse-over every 'Mech they own long enough to see their number of skill nodes equipped for the owned 'Mechs. This is because information pertaining to the 'Mechs on the webpage is live-loaded when the player mouses over the icon of their owned 'Mech. Once all owned 'Mechs have been moused over the user may again right-click the webpage and select "Save Page As..." with the .html file extension. The tool will prompt the user for their In-Game name via a message box to properly name the .CSV file when it is created.
 
 ## Running the source code yourself
 For those who are skeptical about running the executable and would prefer to run the source code instead, you will need 
@@ -38,17 +38,10 @@ prompt lines to install the required libraries.
 
 You will need to download and install the latest version of Python.
 
-### Steps to install Python
+### Installing Python
 1. Open your web-browser and navigate to https://www.python.org/
-2. Navigate to Downloads and install the latest appropriate version based on the machine you are running on.
-3. Double click the downloaded file and install for all users. Please ensure that Python is added to your path via the little check box at the bottom of the installers initial page. (This will ensure that you can use Python from any location in your file system and we will double check that it was set up correctly.)
-4. Left-Click the 'Customize Installation' button.
-5. Left-Click the 'Next' button on the new screen that appeared.
-6. Left-Click the box for 'Install Python for all users' so that it is marked with a check-mark.
-7. Ensure that 'Add Python to environment variables' is checked with a check-mark.
-8. Select an installation path (where you want Python to be saved on your PC).
-9. Left-Click the 'Install' button.
-10.  After installation has completed, press the 'Close' button to end the installation.
+2. Follow the instructions listed for your particular system on https://wiki.python.org/moin/BeginnersGuide/Download
+
 
 ### Next, you need to ensure that your PC understands where Python is located on your PC
 Here are the steps to set up your PATH environment to include Python, so you can run the script:
@@ -69,16 +62,16 @@ Open the Command Prompt and type the following commands:
 python -m pip install BeautifulSoup4
 python -m pip install requests
 python -m pip install pandas
-python -m pip install maskpass
 python -m pip install regex
+python -m pip install tkinter
 ```
 
 #### What do these dependencies do?
 [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io/en/latest/) allows us to pull data from HTML and XML files and parse it.
 [requests](https://pypi.org/project/requests/) allows us to make HTTP requests, or in our case, log in to mwomercs.com.
 [pandas](https://pandas.pydata.org/) allows us to analyze and format the data scraped from mwomercs.com.
-[maskpass](https://pypi.org/project/maskpass/) allows us to hide the password on input.
 [regex](https://docs.python.org/3/howto/regex.html) is used for regular expressions.
+[tkinter](https://docs.python.org/3/library/tkinter.html) is used to create the GUI.
 
 Once you have installed Python and all the required libraries simply scroll up, find the big green '<>Code' button, 
 click on it, select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
@@ -95,6 +88,7 @@ Thank you Tarogato for being a guinea pig and helping me test this tool via atte
 - Pointing out redundancies and suggesting additions to owned_mechs_SP.csv
 
 A big thank you to Woodrick for asking that this tool be developed.
+- Making suggestions for the README
 
 Thank you Grinny for cleaning up my horrible README and the root directory.
 - Adding the gitignore

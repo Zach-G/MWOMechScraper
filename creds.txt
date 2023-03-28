@@ -1,2 +1,0 @@
-email=user@email.com
-password=hunter2
