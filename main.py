@@ -19,10 +19,14 @@ profileMechStats_url = 'https://mwomercs.com/profile/stats?type=mech'
 collection_data_url = 'https://mwomercs.com/mech-collection/data'
 # Logged-In Player's Profile Webpage
 player_url = 'https://mwomercs.com/profile'
+# MechDB API
+mech_db_url = "https://mwo.nav-alpha.com/api/mechs/"
 
 # Current Working Directory, needed for the storing of the files being created.
 cwd = os.getcwd()
 
+
+# ------------------------------------- ONLINE SECTION -------------------------------------
 
 # A function for gathering user credentials from a specific file or user input if the file does not exist.
 def gather_login_creds(output_box):
@@ -98,6 +102,206 @@ def gather_user_ign(session, output_box):
     return player_ign.text
 
 
+# A function to scrape the 'Mech Stats table on the user's profile 'Mech Stats page.
+def unsorted_mech_stats(session, user, output_box):
+    update_output(output_box, "Attempting to gather information on players 'Mech stats at " +
+                  profileMechStats_url + "\n")
+    update_output(output_box, "This may take a minute, so please be patient.\n")
+
+    r = session.get(profileMechStats_url)
+    soup = BeautifulSoup(r.text, 'html.parser')
+    unsorted_data_frame_helper(soup, user, output_box)
+
+
+# A function to return the JSON from mechDB if a successful request was made.
+def mech_db_helper(output_box):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer Z8YvyDlFEubyCYGbqtkaGMrfmAKuJwHOXaae3hxqbml1ytmww2qpeiKRgp97efG1",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0"
+    }
+    mech_db = requests.request("POST", mech_db_url, headers=headers)
+    if mech_db.status_code == 200:
+        update_output(output_box, "Loading additional data from MechDB.")
+        return mech_db.json()
+    else:
+        update_output(output_box, "Unable to load extra data from MechDB. Continuing.")
+        return ""
+
+
+# A function for gathering information about the user's owned 'Mechs.
+def player_owned_mechs_info(session, user_ign, output_box):
+    update_output(output_box, "Attempting to gather information about player's owned 'Mechs "
+                  "(Variant, mechID) from players unique JSON located at https://mwomercs.com/mech-collection/data\n")
+    # Access the JSON that contains all the players 'Mech variant information at collection_data_url.
+    update_output(output_box, "Opening session with " + collection_data_url + "\n")
+    response = session.get(collection_data_url)
+
+    # A dictionary to contain 'Mech IDs and their skill nodes.
+    dict_mech_ids = {}
+
+    # Convert the JSON text into a python recognizable data format (I.E., Dict)
+    update_output(output_box, "Loading players 'Mech Collection JSON.\n")
+    data = json.loads(response.text)
+    collection = data['collection']
+    update_output(output_box, "Parsing the JSON and gathering all owned 'Mechs Variants and associated mechIDs.\n")
+    for collection_data in collection:
+        variants_data = collection_data['variants']
+        for specific_variant in variants_data:
+            if variants_data[specific_variant]['owned'] is True:
+                # Store the list of mechIDs for a specific variant
+                mech_ids = variants_data[specific_variant]['mech_ids']
+                # Create an entry in the dictionary of 'Mechs to hold the list of mechIDs
+                dict_mech_ids[variants_data[specific_variant]['display_name']] = mech_ids
+    update_output(output_box, "Finished parsing and gathering all owned 'Mech Variants and their associated mechIDs.\n")
+
+    # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
+    list_mech_chass_name_sp = []
+
+    update_output(output_box, "Gathering owned 'Mech user defined name, and number of equipped skill points from "
+                  "https://mwomercs.com/mech-collection/data/stats?mid[]=<Individual 'Mechs MechID>\n")
+    update_output(output_box, "Gathering additional 'Mech information (Tonnage, Faction, Class) from mechDB API.\n")
+    update_output(output_box, "This may take a while, so please be patient.\n")
+
+    # also grab chassis data from the MechDB API - we have to lie about the user agent; or we'll get blocked
+    mech_data = mech_db_helper(output_box)
+
+    for mech, mechID in dict_mech_ids.items():
+        for i in mechID:
+            # We now have access to each individual 'mechs mechID.
+
+            # ------------- Individual mech's skill point scraper ---------------
+            # Create url of the specific 'Mech we want the information of
+            spec_mech_url = collection_data_url + "/stats?mid[]=" + i
+            response_spec_mech = session.get(spec_mech_url)
+            dict_spec_mech = json.loads(response_spec_mech.text)
+
+            for mech_chassis in dict_spec_mech['mechs']:
+                mechlab_mech_name = mech_chassis['name']
+                spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
+                if mech_data != "":
+                    for mech_info in mech_data["data"]:
+                        if mech_info['display_name'] == mech:
+                            mech_tonnage = mech_info['tonnage']
+                            mech_faction = mech_info['faction']
+                            mech_class = mech_info['class']
+                else:
+                    mech_tonnage = "--"
+                    mech_faction = "--"
+                    mech_class = "--"
+                # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
+                # crafting of look-up tables.
+                list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mech_name, mech_tonnage,
+                                                mech_faction, mech_class, spec_mech_skills))
+    update_output(output_box, "Finished gathering information about player's owned 'Mechs.\n")
+
+    # Convert list of tuples (mech base variant, actual variant, name, tonnage, faction, weight class, equipped skill
+    # points) into a dataframe.
+    update_output(output_box, "Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, "
+                              "Weight Class, Skill Points) to dataframe.\n")
+    df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_sp,
+                                        columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class',
+                                                 'Skill Points'])
+
+    # Convert dataframe to csv file.
+    update_output(output_box, "Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, "
+                              "Skill Points) dataframe to .csv format for users viewing.\n")
+    df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
+
+
+def run_online_stat_scraper(output_box):
+    # Code for online stat scraper
+    update_output(output_box, "Running Online Stat Scraper")
+    # Player's Credentials to be used on log-in
+    payload = gather_login_creds(output_box)
+    try:
+        # Check if the site is available
+        if not is_site_available(login_url):
+            raise Exception("Unable to connect to the site. Please check your internet connection and try again.")
+
+        # Open a session
+        with requests.session() as s:
+            update_output(output_box, "Attempting to log in to mwomercs.com with the supplied credentials and gather "
+                                      "the relevant information. One moment please. :)\n")
+            # Send log in credentials to the log in url.
+            response = s.post(login_url, data=payload)
+            if response.status_code == 200:
+                update_output(output_box, "Log in successful.\n")
+
+                # Get player profile name
+                player_name = gather_user_ign(s, output_box)
+
+                # Get unsorted table of 'Mech stats and create a .csv of it.
+                unsorted_mech_stats(s, player_name, output_box)
+
+                # ---------- Sort By Time Played ----------
+                sorted_mech_stats_tp(player_name, output_box)
+
+                # ---------- Sort by Matches Played ----------
+                sorted_mech_stats_mp(player_name, output_box)
+
+                update_output(output_box, "Your spreadsheets have been created! :D\n")
+            else:
+                update_output(output_box, "Failed to log in with status code: {response.status_code}\n")
+    except Exception as e:
+        update_output(output_box, "An error occurred: {e}\n")
+
+
+def run_online_mech_scraper(output_box):
+    # Code for online stat scraper
+    update_output(output_box, "Running Online Stat Scraper\n")
+    # Player's Credentials to be used on log-in
+    payload = gather_login_creds(output_box)
+    try:
+        # Check if the site is available
+        if not is_site_available(login_url):
+            raise Exception("Unable to connect to the site. Please check your internet connection and try again.\n")
+
+        # Open a session
+        with requests.session() as s:
+            update_output(output_box, "Attempting to log in to mwomercs.com with the supplied credentials and gather "
+                                      "the relevant information. One moment please. :)\n")
+            # Send log in credentials to the log in url.
+            response = s.post(login_url, data=payload)
+            if response.status_code == 200:
+                update_output(output_box, "Log in successful.\n")
+
+                # Get player profile name
+                player_name = gather_user_ign(s, output_box)
+
+                # ---------- Players Owned 'Mechs ----------
+                player_owned_mechs_info(s, player_name, output_box)
+
+                update_output(output_box, "Your spreadsheets have been created! :D\n")
+            else:
+                update_output(output_box, "Failed to log in with status code: {response.status_code}\n")
+    except Exception as e:
+        update_output(output_box, "An error occurred: {e}\n")
+# ------------------------------------------------------------------------------------------
+
+
+# ------------------------------------- OFFLINE SECTION ------------------------------------
+
+# A function to set up the unsorted 'Mech stats dataframe and create it's .csv file.
+def unsorted_data_frame_helper(htmltext, user, output_box):
+    # Create the dataframe
+    update_output(output_box, "Creating dataframe to hold data.\n")
+    mech_data = pd.DataFrame(columns=unsorted_header_helper(unsorted_html_table_helper(htmltext, output_box),
+                                                            output_box))
+    update_output(output_box, "Finished setting up dataframe.\n")
+
+    # Fill the dataframe
+    update_output(output_box, "Filling dataframe with the table from " + profileMechStats_url + "\n")
+
+    unsorted_fill_data_frame_helper(unsorted_html_table_helper(htmltext, output_box), mech_data, output_box)
+    update_output(output_box, "Finished filling the dataframe.\n")
+
+    # Convert scraped data table to .csv
+    update_output(output_box, "Converting (unsorted) dataframe to .csv format for users viewing.\n")
+    mech_data.to_csv(cwd + os.sep + user + "_" + 'mech_data_unsorted.csv', index=False)
+    update_output(output_box, "Finished converting dataframe to .csv format.\n")
+
+
 # A helper function to find and return the list of headers from the supplied table of 'Mech Stats.
 def unsorted_header_helper(table, output_box):
     # list to store headers of the table from the HTML from profileMechStats_url.
@@ -130,35 +334,28 @@ def unsorted_html_table_helper(htmltext, output_box):
     return htmltext.find('table', class_='table table-striped')
 
 
-# A function to set up the unsorted 'Mech stats dataframe and create it's .csv file.
-def unsorted_data_frame_helper(htmltext, user, output_box):
-    # Create the dataframe
-    update_output(output_box, "Creating dataframe to hold data.\n")
-    mech_data = pd.DataFrame(columns=unsorted_header_helper(unsorted_html_table_helper(htmltext, output_box),
-                                                            output_box))
-    update_output(output_box, "Finished setting up dataframe.\n")
+# A function for sorting the unsorted 'Mech stats by matches played.
+def sorted_mech_stats_mp(user_ign, output_box):
+    update_output(output_box, "Now attempting to sort 'Mechs by matches played.\n")
+    update_output(output_box, "Loading data from unsorted .csv file to dataframe.\n")
 
-    # Fill the dataframe
-    update_output(output_box, "Filling dataframe with the table from " + profileMechStats_url + "\n")
+    # Create dataframe of 'Mechs sorted by matches played.
+    sorted_matches_played = pd.read_csv(user_ign + "_" + 'mech_data_unsorted.csv')
+    update_output(output_box, "Finished loading the unsorted data to dataframe.\n")
 
-    unsorted_fill_data_frame_helper(unsorted_html_table_helper(htmltext, output_box), mech_data, output_box)
-    update_output(output_box, "Finished filling the dataframe.\n")
+    # Removed columns that offer no real beneficial information
+    update_output(output_box, "Removing 'Time Played' and 'XP Earned' entries from dataframe.\n")
+    sorted_matches_played.drop(columns=['Time Played', 'XP Earned'], inplace=True)
+    update_output(output_box, "Finished removing the 'Time Played' and 'XP Earned' columns from the dataframe.\n")
 
-    # Convert scraped data table to .csv
-    update_output(output_box, "Converting (unsorted) dataframe to .csv format for users viewing.\n")
-    mech_data.to_csv(cwd + os.sep + user + "_" + 'mech_data_unsorted.csv', index=False)
-    update_output(output_box, "Finished converting dataframe to .csv format.\n")
+    # Sort by the values stored in the Matches Played column.
+    update_output(output_box, "Sorting dataframe entries by Matches Played.\n")
+    sorted_matches_played.sort_values(["Matches Played"], axis=0, ascending=False, inplace=True)
+    update_output(output_box, "Finished sorting dataframe entries by Matches Played.\n")
 
-
-# A function to scrape the 'Mech Stats table on the user's profile 'Mech Stats page.
-def unsorted_mech_stats(session, user, output_box):
-    update_output(output_box, "Attempting to gather information on players 'Mech stats at " +
-                  profileMechStats_url + "\n")
-    update_output(output_box, "This may take a minute, so please be patient.\n")
-
-    r = session.get(profileMechStats_url)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    unsorted_data_frame_helper(soup, user, output_box)
+    update_output(output_box, "Converting (sorted) Matches Played dataframe to .csv format for users viewing.\n")
+    sorted_matches_played.to_csv(cwd + os.sep + user_ign + "_" + 'mech_data_sorted_MP.csv', index=False)
+    update_output(output_box, "Finished converting Matches Played dataframe to .csv format.\n")
 
 
 # A function to sort the unsorted 'Mech Stats by time played.
@@ -259,249 +456,6 @@ def sorted_mech_stats_tp(user, output_box):
     sorted_time_played.to_csv(cwd + os.sep + user + "_" + 'mech_data_sorted_TP.csv', index=False)
 
 
-# A function for sorting the unsorted 'Mech stats by matches played.
-def sorted_mech_stats_mp(user_ign, output_box):
-    update_output(output_box, "Now attempting to sort 'Mechs by matches played.\n")
-    update_output(output_box, "Loading data from unsorted .csv file to dataframe.\n")
-
-    # Create dataframe of 'Mechs sorted by matches played.
-    sorted_matches_played = pd.read_csv(user_ign + "_" + 'mech_data_unsorted.csv')
-    update_output(output_box, "Finished loading the unsorted data to dataframe.\n")
-
-    # Removed columns that offer no real beneficial information
-    update_output(output_box, "Removing 'Time Played' and 'XP Earned' entries from dataframe.\n")
-    sorted_matches_played.drop(columns=['Time Played', 'XP Earned'], inplace=True)
-    update_output(output_box, "Finished removing the 'Time Played' and 'XP Earned' columns from the dataframe.\n")
-
-    # Sort by the values stored in the Matches Played column.
-    update_output(output_box, "Sorting dataframe entries by Matches Played.\n")
-    sorted_matches_played.sort_values(["Matches Played"], axis=0, ascending=False, inplace=True)
-    update_output(output_box, "Finished sorting dataframe entries by Matches Played.\n")
-
-    update_output(output_box, "Converting (sorted) Matches Played dataframe to .csv format for users viewing.\n")
-    sorted_matches_played.to_csv(cwd + os.sep + user_ign + "_" + 'mech_data_sorted_MP.csv', index=False)
-    update_output(output_box, "Finished converting Matches Played dataframe to .csv format.\n")
-
-
-# A function to return the JSON from mechDB if a successful request was made.
-def mech_db_helper(output_box):
-    url = "https://mwo.nav-alpha.com/api/mechs/"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer Z8YvyDlFEubyCYGbqtkaGMrfmAKuJwHOXaae3hxqbml1ytmww2qpeiKRgp97efG1",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0"
-    }
-    mech_db = requests.request("POST", url, headers=headers)
-    if mech_db.status_code == 200:
-        update_output(output_box, "Loading additional data from MechDB.")
-        return mech_db.json()
-    else:
-        update_output(output_box, "Unable to load extra data from MechDB. Continuing.")
-        return ""
-
-
-# A function for gathering information about the user's owned 'Mechs.
-def player_owned_mechs_info(session, user_ign, output_box):
-    update_output(output_box, "Attempting to gather information about player's owned 'Mechs "
-                  "(Variant, mechID) from players unique JSON located at https://mwomercs.com/mech-collection/data\n")
-    # Access the JSON that contains all the players 'Mech variant information at collection_data_url.
-    update_output(output_box, "Opening session with " + collection_data_url + "\n")
-    response = session.get(collection_data_url)
-
-    # A dictionary to contain 'Mech IDs and their skill nodes.
-    dict_mech_ids = {}
-
-    # Old code for opening a JSON file stored on the machine. Keeping this here as a reminder for the
-    # offline version.
-    # with open(cwd + os.sep + playername + "_" + 'mech_collection.json') as f:
-
-    # Convert the JSON text into a python recognizable data format (I.E., Dict)
-    update_output(output_box, "Loading players 'Mech Collection JSON.\n")
-    data = json.loads(response.text)
-    collection = data['collection']
-    update_output(output_box, "Parsing the JSON and gathering all owned 'Mechs Variants and associated mechIDs.\n")
-    for collection_data in collection:
-        variants_data = collection_data['variants']
-        for specific_variant in variants_data:
-            if variants_data[specific_variant]['owned'] is True:
-                # Store the list of mechIDs for a specific variant
-                mech_ids = variants_data[specific_variant]['mech_ids']
-                # Create an entry in the dictionary of 'Mechs to hold the list of mechIDs
-                dict_mech_ids[variants_data[specific_variant]['display_name']] = mech_ids
-    update_output(output_box, "Finished parsing and gathering all owned 'Mech Variants and their associated mechIDs.\n")
-
-    # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
-    list_mech_chass_name_sp = []
-
-    update_output(output_box, "Gathering owned 'Mech user defined name, and number of equipped skill points from "
-                  "https://mwomercs.com/mech-collection/data/stats?mid[]=<Individual 'Mechs MechID>\n")
-    update_output(output_box, "Gathering additional 'Mech information (Tonnage, Faction, Class) from mechDB API.\n")
-    update_output(output_box, "This may take a while, so please be patient.\n")
-
-    # also grab chassis data from the MechDB API - we have to lie about the user agent; or we'll get blocked
-    mech_data = mech_db_helper(output_box)
-
-    for mech, mechID in dict_mech_ids.items():
-        for i in mechID:
-            # We now have access to each individual 'mechs mechID.
-
-            # ------------- Individual mech's skill point scraper ---------------
-            # Create url of the specific 'Mech we want the information of
-            spec_mech_url = collection_data_url + "/stats?mid[]=" + i
-            response_spec_mech = session.get(spec_mech_url)
-            dict_spec_mech = json.loads(response_spec_mech.text)
-
-            for mech_chassis in dict_spec_mech['mechs']:
-                mechlab_mech_name = mech_chassis['name']
-                spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
-                if mech_data != "":
-                    for mech_info in mech_data["data"]:
-                        if mech_info['display_name'] == mech:
-                            mech_tonnage = mech_info['tonnage']
-                            mech_faction = mech_info['faction']
-                            mech_class = mech_info['class']
-                else:
-                    mech_tonnage = "--"
-                    mech_faction = "--"
-                    mech_class = "--"
-                # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
-                # crafting of look-up tables.
-                list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mech_name, mech_tonnage,
-                                                mech_faction, mech_class, spec_mech_skills))
-    update_output(output_box, "Finished gathering information about player's owned 'Mechs.\n")
-
-    # Convert list of tuples (mech base variant, actual variant, name, tonnage, faction, weight class, equipped skill
-    # points) into a dataframe.
-    update_output(output_box, "Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, "
-                              "Weight Class, Skill Points) to dataframe.\n")
-    df_list_mech_name_sp = pd.DataFrame(list_mech_chass_name_sp,
-                                        columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class',
-                                                 'Skill Points'])
-
-    # Convert dataframe to csv file.
-    update_output(output_box, "Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, "
-                              "Skill Points) dataframe to .csv format for users viewing.\n")
-    df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
-
-
-# A method to check if the site is available.
-def is_site_available(url):
-    try:
-        response = requests.head(url, timeout=5)
-        if response.status_code >= 400:
-            return False
-        return True
-    except requests.exceptions.RequestException:
-        return False
-
-
-def run_online_stat_scraper(output_box):
-    # Code for online stat scraper
-    update_output(output_box, "Running Online Stat Scraper")
-    # Player's Credentials to be used on log-in
-    payload = gather_login_creds(output_box)
-    try:
-        # Check if the site is available
-        if not is_site_available(login_url):
-            raise Exception("Unable to connect to the site. Please check your internet connection and try again.")
-
-        # Open a session
-        with requests.session() as s:
-            update_output(output_box, "Attempting to log in to mwomercs.com with the supplied credentials and gather "
-                                      "the relevant information. One moment please. :)\n")
-            # Send log in credentials to the log in url.
-            response = s.post(login_url, data=payload)
-            if response.status_code == 200:
-                update_output(output_box, "Log in successful.\n")
-
-                # Get player profile name
-                player_name = gather_user_ign(s, output_box)
-
-                # Get unsorted table of 'Mech stats and create a .csv of it.
-                unsorted_mech_stats(s, player_name, output_box)
-
-                # ---------- Sort By Time Played ----------
-                sorted_mech_stats_tp(player_name,output_box)
-
-                # ---------- Sort by Matches Played ----------
-                sorted_mech_stats_mp(player_name, output_box)
-
-                update_output(output_box, "Your spreadsheets have been created! :D\n")
-            else:
-                update_output(output_box, "Failed to log in with status code: {response.status_code}\n")
-    except Exception as e:
-        update_output(output_box, "An error occurred: {e}\n")
-
-
-def run_online_mech_scraper(output_box):
-    # Code for online stat scraper
-    update_output(output_box, "Running Online Stat Scraper\n")
-    # Player's Credentials to be used on log-in
-    payload = gather_login_creds(output_box)
-    try:
-        # Check if the site is available
-        if not is_site_available(login_url):
-            raise Exception("Unable to connect to the site. Please check your internet connection and try again.\n")
-
-        # Open a session
-        with requests.session() as s:
-            update_output(output_box, "Attempting to log in to mwomercs.com with the supplied credentials and gather "
-                                      "the relevant information. One moment please. :)\n")
-            # Send log in credentials to the log in url.
-            response = s.post(login_url, data=payload)
-            if response.status_code == 200:
-                update_output(output_box, "Log in successful.\n")
-
-                # Get player profile name
-                player_name = gather_user_ign(s, output_box)
-
-                # ---------- Players Owned 'Mechs ----------
-                player_owned_mechs_info(s, player_name, output_box)
-
-                update_output(output_box, "Your spreadsheets have been created! :D\n")
-            else:
-                update_output(output_box, "Failed to log in with status code: {response.status_code}\n")
-    except Exception as e:
-        update_output(output_box, "An error occurred: {e}\n")
-
-
-# A function to prompt the user for an In-Game Name so the Offline files may be properly labeled.
-def get_user_ign(output_box):
-    user_ign = ""  # variable to store the user's input.
-
-    # Nested function for the submit button to store the user's input before destroying the box that prompts the user.
-    def submit_username():
-        nonlocal user_ign
-        user_ign = user_ign_entry.get()
-        dialog.destroy()
-
-    # Set up box to prompt user for their In-Game name.
-    dialog = tk.Toplevel()
-    dialog.title("In-Game Name")
-    tk.Label(dialog, text="Please enter your in-game username so we may properly label the file.").grid(row=0,
-                                                                                                        column=0,
-                                                                                                        padx=5,
-                                                                                                        pady=5)
-    user_ign_entry = tk.Entry(dialog)
-    user_ign_entry.grid(row=1, column=0, padx=5, pady=5)
-
-    # Create submit button for prompt box.
-    submit_button = tk.Button(dialog, text="Submit", command=submit_username)
-    submit_button.grid(row=2, column=0, padx=5, pady=5)
-
-    # Center the prompt box in the center of the users screen
-    dialog.update_idletasks()
-    x = (dialog.winfo_screenwidth() - dialog.winfo_reqwidth()) / 2
-    y = (dialog.winfo_screenheight() - dialog.winfo_reqheight()) / 2
-    dialog.geometry("+%d+%d" % (x, y))
-
-    dialog.transient(output_box.master)
-    dialog.grab_set()
-    output_box.master.wait_window(dialog)
-
-    return user_ign
-
-
 def run_offline_stat_scraper(output_box):
     # Code for offline stat scraper
     update_output(output_box, "Running Offline Stat Scraper\n")
@@ -521,27 +475,6 @@ def run_offline_stat_scraper(output_box):
         update_output(output_box, "Your spreadsheets have been created! :D\n")
     else:
         update_output(output_box, "File path not valid or file not selected. HTML file does not exist.\n")
-
-
-def get_file_path(output_box):
-    # Ask the user to select a file
-    update_output(output_box, "Gathering file path to the HTML file from user.\n")
-
-    file_path = tk.filedialog.askopenfilename(initialdir=os.path.expanduser('~'), title="Select HTML File",
-                                              filetypes=[("HTML Files", "*.html")])
-    # Check if the user selected a file
-    if file_path:
-        # If a file was selected, print the path to the file
-        update_output(output_box, "Selected file: " + file_path + "\n")
-        with open(file_path, "r", encoding="utf8") as file:
-            # Read the contents of the file and parse with BeautifulSoup
-            html = file.read()
-            soup = BeautifulSoup(html, "html.parser")
-            return soup  # return the soup object
-    else:
-        # If no file was selected, print a message to the console and return None
-        update_output(output_box, "No file selected\n")
-        return None
 
 
 def run_offline_mech_scraper(output_box):
@@ -651,12 +584,93 @@ def html_mech_scraper(html, user_ign, output_box):
     df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
 
     update_output(output_box, "Your spreadsheets have been created! :D\n")
+# ------------------------------------------------------------------------------------------
+
+
+# ------------------------------------- AUXILIARY ------------------------------------------
+
+# A function for updating the output text box on the GUI, so we don't need to continuously call the same 5 lines
+# of code.
+def update_output(output_box, output_str):
+    output_box.config(state=tk.NORMAL)     # Turn off "Read-Only" on the text box.
+    output_box.insert(tk.END, output_str)  # Print the string to the text box.
+    output_box.update()                    # Update the display of the text box to see the newly printed string.
+    output_box.see(tk.END)                 # Automatically "scroll-down" the text box.
+    output_box.config(state=tk.DISABLED)   # Turn on "Read-Only" on the text box.
+
+
+# A method to check if the site is available.
+def is_site_available(url):
+    try:
+        response = requests.head(url, timeout=5)
+        if response.status_code >= 400:
+            return False
+        return True
+    except requests.exceptions.RequestException:
+        return False
+
+
+def get_file_path(output_box):
+    # Ask the user to select a file
+    update_output(output_box, "Gathering file path to the HTML file from user.\n")
+
+    file_path = tk.filedialog.askopenfilename(initialdir=os.path.expanduser('~'), title="Select HTML File",
+                                              filetypes=[("HTML Files", "*.html")])
+    # Check if the user selected a file
+    if file_path:
+        # If a file was selected, print the path to the file
+        update_output(output_box, "Selected file: " + file_path + "\n")
+        with open(file_path, "r", encoding="utf8") as file:
+            # Read the contents of the file and parse with BeautifulSoup
+            html = file.read()
+            soup = BeautifulSoup(html, "html.parser")
+            return soup  # return the soup object
+    else:
+        # If no file was selected, print a message to the console and return None
+        update_output(output_box, "No file selected\n")
+        return None
+
+
+# A function to prompt the user for an In-Game Name so the Offline files may be properly labeled.
+def get_user_ign(output_box):
+    user_ign = ""  # variable to store the user's input.
+
+    # Nested function for the submit button to store the user's input before destroying the box that prompts the user.
+    def submit_username():
+        nonlocal user_ign
+        user_ign = user_ign_entry.get()
+        dialog.destroy()
+
+    # Set up box to prompt user for their In-Game name.
+    dialog = tk.Toplevel()
+    dialog.title("In-Game Name")
+    tk.Label(dialog, text="Please enter your in-game username so we may properly label the file.").grid(row=0,
+                                                                                                        column=0,
+                                                                                                        padx=5,
+                                                                                                        pady=5)
+    user_ign_entry = tk.Entry(dialog)
+    user_ign_entry.grid(row=1, column=0, padx=5, pady=5)
+
+    # Create submit button for prompt box.
+    submit_button = tk.Button(dialog, text="Submit", command=submit_username)
+    submit_button.grid(row=2, column=0, padx=5, pady=5)
+
+    # Center the prompt box in the center of the users screen
+    dialog.update_idletasks()
+    x = (dialog.winfo_screenwidth() - dialog.winfo_reqwidth()) / 2
+    y = (dialog.winfo_screenheight() - dialog.winfo_reqheight()) / 2
+    dialog.geometry("+%d+%d" % (x, y))
+
+    dialog.transient(output_box.master)
+    dialog.grab_set()
+    output_box.master.wait_window(dialog)
+
+    return user_ign
 
 
 # A function to store a copy of MechDB's API JSON response on the user's machine.
 def update_offline_mech_db(output_box):
     # Code for updating the locally stored information of MechDB.
-    url = "https://mwo.nav-alpha.com/api/mechs/"
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer Z8YvyDlFEubyCYGbqtkaGMrfmAKuJwHOXaae3hxqbml1ytmww2qpeiKRgp97efG1",
@@ -664,7 +678,7 @@ def update_offline_mech_db(output_box):
     }
     update_output(output_box, "Attempting to establish a connection with MechDB "
                               "(https://mwo.nav-alpha.com/api/mechs/).\n")
-    mech_db = requests.request("POST", url, headers=headers)
+    mech_db = requests.request("POST", mech_db_url, headers=headers)
     if mech_db.status_code == 200:
         update_output(output_box, "Connection with MechDB successful.\n")
         update_output(output_box, "Saving additional data from MechDB.\n")
@@ -675,16 +689,7 @@ def update_offline_mech_db(output_box):
     else:
         update_output(output_box, "Unable to load extra data from MechDB.\n")
         update_output(output_box, "MechDB information failed to save.\n")
-
-
-# A function for updating the output text box on the GUI, so we don't need to continuously call the same 5 lines
-# of code.
-def update_output(output_box, output_str):
-    output_box.config(state=tk.NORMAL)     # Turn off "Read-Only" on the text box.
-    output_box.insert(tk.END, output_str)  # Print the string to the text box.
-    output_box.update()                    # Update the display of the text box to see the newly printed string.
-    output_box.see(tk.END)                 # Automatically "scroll-down" the text box.
-    output_box.config(state=tk.DISABLED)   # Turn on "Read-Only" on the text box.
+# ------------------------------------------------------------------------------------------
 
 
 def main():
