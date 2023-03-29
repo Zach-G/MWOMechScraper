@@ -540,7 +540,7 @@ def html_mech_scraper(html, user_ign, output_box):
                 template = "An exception of type {0} occurred.\n"
                 message = template.format(type(e).__name__)
                 update_output(output_box, message)
-                update_output(output_box, "Are you sure you properly loaded the 'Mechs entry before saving your "
+                update_output(output_box, "Are you sure you properly loaded all 'Mech entries before saving your "
                                           "html file?\n")
                 return
 
