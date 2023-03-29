@@ -594,8 +594,7 @@ def html_mech_scraper(html, user_ign, output_box):
         if not mech_list:
             # If empty, explain why their .csv may not have been created.
             update_output(output_box, "Mech List was not generated due to an error occurring.\n")
-            update_output(output_box, "Sorry, your .csv file was not created. Please ensure you loaded all your owned "
-                                      "'Mechs on MWOMercs before saving the page.\n")
+            update_output(output_box, "Are you sure you selected the correct .html file?\n")
         else:
             # Otherwise, create their .csv file.
             update_output(output_box, "We have finished making the list of owned 'Mechs and their appropriate "
