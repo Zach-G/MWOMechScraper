@@ -250,6 +250,13 @@ def run_online_stat_scraper(output_box):
         update_output(output_box, message)
 
 
+def test(output_box, status_code):
+    output_box.config(tk.NORMAL)
+    output_box.set_text(f"Status code: {status_code}")
+    output_box.update()
+    output_box.see(tk.END)
+    output_box.config(tk.DISABLED)
+
 def run_online_mech_scraper(output_box):
     # Code for online stat scraper
     update_output(output_box, "Running Online Stat Scraper\n")
@@ -266,6 +273,14 @@ def run_online_mech_scraper(output_box):
                                       "the relevant information. One moment please. :)\n")
             # Send log in credentials to the log in url.
             response = s.post(login_url, data=payload)
+
+            if 'Invalid email/password' in response.text:
+                update_output(output_box, "Invalid email/password entered, please try again.\n")
+                return
+            if 'An internal server error has occured' in response.text:  # Lols. PGI has a typo in their error message.
+                update_output(output_box, "(50) An internal server error has occurred. Please contact support.\n")
+                update_output(output_box, "... Just to be clear, contact PGI support. It's their error, not mine.\n")
+                return
             if response.status_code == 200:
                 update_output(output_box, "Log in successful.\n")
 
