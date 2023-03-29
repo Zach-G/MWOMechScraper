@@ -10,6 +10,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+
 # Urls
 # Log-in Webpage
 login_url = 'https://mwomercs.com/do/login'
@@ -244,7 +245,9 @@ def run_online_stat_scraper(output_box):
             else:
                 update_output(output_box, "Failed to log in with status code: {response.status_code}\n")
     except Exception as e:
-        update_output(output_box, "An error occurred: {e}\n")
+        template = "An exception of type {0} occurred.\n"
+        message = template.format(type(e).__name__)
+        update_output(output_box, message)
 
 
 def run_online_mech_scraper(output_box):
@@ -276,7 +279,9 @@ def run_online_mech_scraper(output_box):
             else:
                 update_output(output_box, "Failed to log in with status code: {response.status_code}\n")
     except Exception as e:
-        update_output(output_box, "An error occurred: {e}\n")
+        template = "An exception of type {0} occurred.\n"
+        message = template.format(type(e).__name__)
+        update_output(output_box, message)
 # ------------------------------------------------------------------------------------------
 
 
@@ -288,6 +293,8 @@ def unsorted_data_frame_helper(htmltext, user, output_box):
     update_output(output_box, "Creating dataframe to hold data.\n")
     mech_data = pd.DataFrame(columns=unsorted_header_helper(unsorted_html_table_helper(htmltext, output_box),
                                                             output_box))
+    if mech_data.columns.empty:
+        return False
     update_output(output_box, "Finished setting up dataframe.\n")
 
     # Fill the dataframe
@@ -308,11 +315,16 @@ def unsorted_header_helper(table, output_box):
     headers = []
 
     update_output(output_box, "Gathering table headers.\n")
-
-    for i in table.find_all('th'):
-        title = i.text
-        headers.append(title)
-    return headers
+    try:
+        for i in table.find_all('th'):
+            title = i.text
+            headers.append(title)
+        return headers
+    except Exception as e:
+        template = "An exception of type {0} occurred.\n"
+        message = template.format(type(e).__name__)
+        update_output(output_box, message)
+        update_output(output_box, "Are you sure you selected the correct .html file?\n")
 
 
 # A function to fill the unsorted 'Mech Stats dataframe.
@@ -330,7 +342,7 @@ def unsorted_fill_data_frame_helper(table, dataframe, output_box):
 # A function to return the table found within the html text of the 'Mech Stats page.
 def unsorted_html_table_helper(htmltext, output_box):
     # Obtain information from tag <table>
-    update_output(output_box, "Finding Table of \'Mech stats.\n")
+    update_output(output_box, "Finding Table of 'Mech stats.\n")
     return htmltext.find('table', class_='table table-striped')
 
 
@@ -465,10 +477,11 @@ def run_offline_stat_scraper(output_box):
     if soup is not None:  # check if soup is not None
         update_output(output_box, "Please enter your in-game username so we may properly label the file.\n")
         user_ign = get_user_ign(output_box)
-        unsorted_data_frame_helper(soup, user_ign, output_box)
+
+        if unsorted_data_frame_helper(soup, user_ign, output_box) is False:
+            return
         # ---------- Sort By Time Played ----------
         sorted_mech_stats_tp(user_ign, output_box)
-
         # ---------- Sort by Matches Played ----------
         sorted_mech_stats_mp(user_ign, output_box)
 
@@ -496,94 +509,119 @@ def html_mech_scraper(html, user_ign, output_box):
     # A list for us to store tuples containing the information about a 'Mech from the HTML file provided.
     mech_list = []
 
-    # Find all 'Mechs that are owned within the HTML provided.
-    for owned_mechs in html.find_all('li', class_='mech-collection-item owned'):
-        # Get the 'Mechs Chassis Variant from the <h5> Header.
-        chassis_variant = owned_mechs.find('h5').text
-        parent = owned_mechs.find_parent('ul')
-        grandparent = parent.find_parent('div')
-        # Get the 'Mechs associated Faction [Inner Sphere, Clan] and it's Weight Class [Light, Medium, Heavy, Assault].
-        # The HTML has the information saved in the following format, "Faction Weight_Class". So we need to split along
-        # the spaces to separate the Factions from the Weight Class.
-        chassis_faction_and_weight_class = grandparent.find('h3', class_='mech-collection-chassis-subtitle')
-        chassis_faction_and_weight_class = chassis_faction_and_weight_class.text.split()
-        if len(chassis_faction_and_weight_class) == 2:
-            # Clan
-            mech_faction = chassis_faction_and_weight_class[0].lower()  # Using .lower() to follow MechDB convention.
-            mech_weight_class = chassis_faction_and_weight_class[1].lower()
-        else:
-            # Inner Sphere
-            mech_faction = chassis_faction_and_weight_class[0].lower() + "_" + \
-                           chassis_faction_and_weight_class[1].lower()
-            mech_weight_class = chassis_faction_and_weight_class[2].lower()
+    try:
+        # Find all 'Mechs that are owned within the HTML provided.
+        for owned_mechs in html.find_all('li', class_='mech-collection-item owned'):
+            # Get the 'Mechs Chassis Variant from the <h5> Header.
+            chassis_variant = owned_mechs.find('h5').text
+            parent = owned_mechs.find_parent('ul')
+            grandparent = parent.find_parent('div')
+            # Get the 'Mechs associated Faction [Inner Sphere, Clan] and it's Weight Class [Light, Medium, Heavy, Assault].
+            # The HTML has the information saved in the following format, "Faction Weight_Class". So we need to split along
+            # the spaces to separate the Factions from the Weight Class.
+            chassis_faction_and_weight_class = grandparent.find('h3', class_='mech-collection-chassis-subtitle')
+            chassis_faction_and_weight_class = chassis_faction_and_weight_class.text.split()
+            if len(chassis_faction_and_weight_class) == 2:
+                # Clan
+                mech_faction = chassis_faction_and_weight_class[0].lower()  # Using .lower() to follow MechDB convention.
+                mech_weight_class = chassis_faction_and_weight_class[1].lower()
+            else:
+                # Inner Sphere
+                mech_faction = chassis_faction_and_weight_class[0].lower() + "_" + \
+                               chassis_faction_and_weight_class[1].lower()
+                mech_weight_class = chassis_faction_and_weight_class[2].lower()
 
-        # Grab the tag which contains potential lists of multiple copies of the same 'Mech.
-        duplicate_mechs = owned_mechs.find('ul')
-        # Grab each individual copy of the same 'Mech a player owns.
-        individual_mech = duplicate_mechs.find_all('li')
-
-        # Find the 'Mechs player-defined name, and it's number of equipped skill points.
-        for mech in individual_mech:
-            # First span entry denotes the copy of the 'Mech (E.G., If you own two copies of the same 'Mech, this entry
-            # will be "1)" and "2)").
-            span_entries = mech.find('span')
-
-            # Second span entry denotes the player defined name for the 'Mech (I.E., renaming the 'Mech in the Mech Lab)
-            span_entries = span_entries.find_next_sibling('span')
-            mechlab_mech_name = span_entries.text
-
-            # Third span entry denotes the string of equipped skill nodes (E.G., "83 / 91").
-            # We only care about the first token, as it is the number denoting the number of equipped nodes.
-            span_entries = span_entries.find_next_sibling('span')
-            span_entries = span_entries.text.split()
-            num_skill_nodes_equipped = span_entries[0]
-
-            # Open the locally stored MechDB JSON file and grab the specified 'Mechs tonnage.
             try:
-                with open("mechdb.json", "r") as file:
-                    mech_data = json.load(file)
-                    # Check that the JSON file is populated with the string of mech information.
-                    if mech_data != "":
-                        for mech_info in mech_data["data"]:
-                            # Find the correct tonnage associated with the mech we are currently looking at.
-                            if mech_info['display_name'] == chassis_variant:
-                                mech_tonnage = mech_info['tonnage']
-                                # Create a tuple of the information about the specific 'Mech and store it in a list.
-                                mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
+                # Grab the tag which contains potential lists of multiple copies of the same 'Mech.
+                duplicate_mechs = owned_mechs.find('ul')
+                # Grab each individual copy of the same 'Mech a player owns.
+                individual_mech = duplicate_mechs.find_all('li')
+            except Exception as e:
+                template = "An exception of type {0} occurred.\n"
+                message = template.format(type(e).__name__)
+                update_output(output_box, message)
+                update_output(output_box, "Are you sure you properly loaded the 'Mechs entry before saving your "
+                                          "html file?\n")
+                return
+
+            # Find the 'Mechs player-defined name, and it's number of equipped skill points.
+            for mech in individual_mech:
+                # First span entry denotes the copy of the 'Mech (E.G., If you own two copies of the same 'Mech, this entry
+                # will be "1)" and "2)").
+                span_entries = mech.find('span')
+
+                # Second span entry denotes the player defined name for the 'Mech (I.E., renaming the 'Mech in the Mech Lab)
+                span_entries = span_entries.find_next_sibling('span')
+                mechlab_mech_name = span_entries.text
+
+                # Third span entry denotes the string of equipped skill nodes (E.G., "83 / 91").
+                # We only care about the first token, as it is the number denoting the number of equipped nodes.
+                span_entries = span_entries.find_next_sibling('span')
+                span_entries = span_entries.text.split()
+                num_skill_nodes_equipped = span_entries[0]
+
+                # Open the locally stored MechDB JSON file and grab the specified 'Mechs tonnage.
+                try:
+                    with open("mechdb.json", "r") as file:
+                        mech_data = json.load(file)
+                        # Check that the JSON file is populated with the string of mech information.
+                        if mech_data != "":
+                            for mech_info in mech_data["data"]:
+                                # Find the correct tonnage associated with the mech we are currently looking at.
+                                if mech_info['display_name'] == chassis_variant:
+                                    mech_tonnage = mech_info['tonnage']
+                                    # Create a tuple of the information about the specific 'Mech and store it in a list.
+                                    mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
                                                    mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
                                                    num_skill_nodes_equipped)))
-                    else:
-                        # The JSON string of information does not exist.
-                        mech_tonnage = "--"
-                        # Create a tuple of the information about the specific 'Mech and store it in a list.
-                        mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
+                        else:
+                            # The JSON string of information does not exist.
+                            mech_tonnage = "--"
+                            # Create a tuple of the information about the specific 'Mech and store it in a list.
+                            mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
                                            mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
                                            num_skill_nodes_equipped)))
-            except (FileNotFoundError, json.JSONDecodeError):
-                # The JSON file was not found.
-                mech_tonnage = "--"
-                # Create a tuple of the information about the specific 'Mech and store it in a list.
-                mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
+
+                except (FileNotFoundError, json.JSONDecodeError):
+                    # The JSON file was not found.
+                    mech_tonnage = "--"
+                    # Create a tuple of the information about the specific 'Mech and store it in a list.
+                    mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
                                    mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
                                    num_skill_nodes_equipped)))
 
-    update_output(output_box, "We have finished making the list of owned 'Mechs and their appropriate tuples.\n")
+        # Check that the list is empty.
+        if not mech_list:
+            # If empty, explain why their .csv may not have been created.
+            update_output(output_box, "Mech List was not generated due to an error occurring.\n")
+            update_output(output_box, "Sorry, your .csv file was not created. Please ensure you loaded all your owned "
+                                      "'Mechs on MWOMercs before saving the page.\n")
+        else:
+            # Otherwise, create their .csv file.
+            update_output(output_box, "We have finished making the list of owned 'Mechs and their appropriate "
+                                      "tuples.\n")
 
-    # Convert list of tuples (mech base variant, actual variant, name, tonnage, faction, weight class, equipped skill
-    # points) into a dataframe.
-    update_output(output_box, "Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, "
-                              "Weight Class, Skill Points) to data frame.\n")
-    df_list_mech_name_sp = pd.DataFrame(mech_list,
-                                        columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class',
-                                                 'Skill Points'])
+            # Convert list of tuples (mech base variant, actual variant, name, tonnage, faction, weight class, equipped
+            # skill points) into a dataframe.
+            update_output(output_box, "Converting list of tuples (Base, Variant, User Defined Name, Tonnage, Faction, "
+                                      "Weight Class, Skill Points) to data frame.\n")
+            df_list_mech_name_sp = pd.DataFrame(mech_list,
+                                                columns=['Base', 'Variant', 'Name', 'Tonnage', 'Faction', 'Class',
+                                                         'Skill Points'])
 
-    # Convert dataframe to csv file.
-    update_output(output_box, "Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, "
-                              "Skill Points) dataframe to .csv format for users viewing.\n")
+            # Convert dataframe to csv file.
+            update_output(output_box, "Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, "
+                                      "Skill Points) dataframe to .csv format for users viewing.\n")
 
-    df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
+            df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
 
-    update_output(output_box, "Your spreadsheets have been created! :D\n")
+            update_output(output_box, "Your spreadsheets have been created! :D\n")
+    except Exception as e:
+        template = "An exception of type {0} occurred.\n"
+        message = template.format(type(e).__name__)
+        update_output(output_box, message)
+        update_output(output_box, "Are you sure you selected the correct .html file?\n")
+
 # ------------------------------------------------------------------------------------------
 
 
