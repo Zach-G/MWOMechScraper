@@ -741,6 +741,8 @@ def check_log_in_creds(response, output_box):
         update_output(output_box, "(50) An internal server error has occurred. Please contact support.\n")
         update_output(output_box, "... Just to be clear, contact PGI support. It's their error, not mine.\n")
         return False
+    if 'Please enter your email and password!' in response.text:
+        update_output(output_box, "Please enter your email and password!\n")
 # ------------------------------------------------------------------------------------------
 
 
