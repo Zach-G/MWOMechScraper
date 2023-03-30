@@ -519,6 +519,8 @@ def html_mech_scraper(html, user_ign, output_box):
         for owned_mechs in html.find_all('li', class_='mech-collection-item owned'):
             # Get the 'Mechs Chassis Variant from the <h5> Header.
             chassis_variant = owned_mechs.find('h5').text
+            # update_output(output_box, chassis_variant + "\n")
+
             parent = owned_mechs.find_parent('ul')
             grandparent = parent.find_parent('div')
             # Get the 'Mechs associated Faction [Inner Sphere, Clan] and it's Weight Class [Light, Medium, Heavy, Assault].
@@ -537,10 +539,20 @@ def html_mech_scraper(html, user_ign, output_box):
                 mech_weight_class = chassis_faction_and_weight_class[2].lower()
 
             try:
+                mech_collection_stats_box = owned_mechs.find('div', class_='mech-collection-stats-box')
+
                 # Grab the tag which contains potential lists of multiple copies of the same 'Mech.
-                duplicate_mechs = owned_mechs.find('ul')
+                mech_collection = mech_collection_stats_box.find('ul')
                 # Grab each individual copy of the same 'Mech a player owns.
-                individual_mech = duplicate_mechs.find_all('li')
+                individual_mech = mech_collection.find_all('li')
+                # Check that the entry actually exists.
+                if not individual_mech:
+                    update_output(output_box, "An error occurred.\n")
+                    update_output(output_box, "Are you sure you properly loaded all 'Mech entries before saving your "
+                                              "html file?\n")
+                    update_output(output_box, "Because it seems you're missing the entries for "
+                                  + chassis_variant + ".\n")
+                    return
             except Exception as e:
                 template = "An exception of type {0} occurred.\n"
                 message = template.format(type(e).__name__)
@@ -551,6 +563,7 @@ def html_mech_scraper(html, user_ign, output_box):
 
             # Find the 'Mechs player-defined name, and it's number of equipped skill points.
             for mech in individual_mech:
+                # update_output(output_box, mech.text + "\n")
                 # First span entry denotes the copy of the 'Mech (E.G., If you own two copies of the same 'Mech, this entry
                 # will be "1)" and "2)").
                 span_entries = mech.find('span')
