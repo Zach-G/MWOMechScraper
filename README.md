@@ -99,3 +99,5 @@ Thank you Bak3y for providing a way for users to use a creds.txt so that users d
 - Adding mechDB API to gather Tonnage, Faction, and Weight Class.
 
 Thank you K2B for creating and maintaining mechDB! This tool would be incomplete without your API!
+
+Thank you CougChaos for helping find bugs within the HTML scraper.
