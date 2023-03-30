@@ -519,10 +519,10 @@ def html_mech_scraper(html, user_ign, output_box):
         for owned_mechs in html.find_all('li', class_='mech-collection-item owned'):
             # Get the 'Mechs Chassis Variant from the <h5> Header.
             chassis_variant = owned_mechs.find('h5').text
-            # update_output(output_box, chassis_variant + "\n")
 
             parent = owned_mechs.find_parent('ul')
             grandparent = parent.find_parent('div')
+
             # Get the 'Mechs associated Faction [Inner Sphere, Clan] and it's Weight Class [Light, Medium, Heavy, Assault].
             # The HTML has the information saved in the following format, "Faction Weight_Class". So we need to split along
             # the spaces to separate the Factions from the Weight Class.
@@ -563,7 +563,6 @@ def html_mech_scraper(html, user_ign, output_box):
 
             # Find the 'Mechs player-defined name, and it's number of equipped skill points.
             for mech in individual_mech:
-                # update_output(output_box, mech.text + "\n")
                 # First span entry denotes the copy of the 'Mech (E.G., If you own two copies of the same 'Mech, this entry
                 # will be "1)" and "2)").
                 span_entries = mech.find('span')
@@ -584,9 +583,13 @@ def html_mech_scraper(html, user_ign, output_box):
                         mech_data = json.load(file)
                         # Check that the JSON file is populated with the string of mech information.
                         if mech_data != "":
+                            # Find the correct tonnage associated with the mech we are currently looking at.
                             for mech_info in mech_data["data"]:
-                                # Find the correct tonnage associated with the mech we are currently looking at.
-                                if mech_info['display_name'] == chassis_variant:
+                                # Remove all '- ( and )' characters from the name variable from MechDB.
+                                name = re.sub(r'[-()]', '', mech_info['name'])
+
+                                # Check that our name variable matches the chassis variant we are looking at
+                                if name == re.sub(r'[-()]', '', chassis_variant.lower()):
                                     mech_tonnage = mech_info['tonnage']
                                     # Create a tuple of the information about the specific 'Mech and store it in a list.
                                     mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
@@ -597,16 +600,16 @@ def html_mech_scraper(html, user_ign, output_box):
                             mech_tonnage = "--"
                             # Create a tuple of the information about the specific 'Mech and store it in a list.
                             mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
-                                           mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
-                                           num_skill_nodes_equipped)))
+                                             mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
+                                             num_skill_nodes_equipped)))
 
                 except (FileNotFoundError, json.JSONDecodeError):
                     # The JSON file was not found.
                     mech_tonnage = "--"
                     # Create a tuple of the information about the specific 'Mech and store it in a list.
                     mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
-                                   mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
-                                   num_skill_nodes_equipped)))
+                                     mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
+                                     num_skill_nodes_equipped)))
 
         # Check that the list is empty.
         if not mech_list:
