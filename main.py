@@ -9,6 +9,7 @@ from tkinter import messagebox
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import glob
 
 
 # Urls
@@ -123,14 +124,14 @@ def mech_db_helper(output_box):
     }
     mech_db = requests.request("POST", mech_db_url, headers=headers)
     if mech_db.status_code == 200:
-        update_output(output_box, "Loading additional data from MechDB.")
+        update_output(output_box, "Loading additional data from MechDB.\n")
         return mech_db.json()
     else:
-        update_output(output_box, "Unable to load extra data from MechDB. Continuing.")
+        update_output(output_box, "Unable to load extra data from MechDB. Continuing.\n")
         return ""
 
 
-# A function for gathering information about the user's owned 'Mechs.
+# A function for gathering information about the user's owned 'Mechs (Online).
 def player_owned_mechs_info(session, user_ign, output_box):
     update_output(output_box, "Attempting to gather information about player's owned 'Mechs "
                   "(Variant, mechID) from players unique JSON located at https://mwomercs.com/mech-collection/data\n")
@@ -180,16 +181,18 @@ def player_owned_mechs_info(session, user_ign, output_box):
             for mech_chassis in dict_spec_mech['mechs']:
                 mechlab_mech_name = mech_chassis['name']
                 spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
+                mech_tonnage = "--"
+                mech_faction = "--"
+                mech_class = "--"
                 if mech_data != "":
                     for mech_info in mech_data["data"]:
-                        if mech_info['display_name'] == mech:
+                        # Check that mechdb 'name' for the mech matches the 'name' found in the JSON retrieved from the website.
+                        if re.sub(r'[-()]', '', mech_info['name']).lower() == re.sub(r'[-()]', '', mech).lower():
+
+
                             mech_tonnage = mech_info['tonnage']
                             mech_faction = mech_info['faction']
                             mech_class = mech_info['class']
-                else:
-                    mech_tonnage = "--"
-                    mech_faction = "--"
-                    mech_class = "--"
                 # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                 # crafting of look-up tables.
                 list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mech_name, mech_tonnage,
@@ -207,7 +210,7 @@ def player_owned_mechs_info(session, user_ign, output_box):
     # Convert dataframe to csv file.
     update_output(output_box, "Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, "
                               "Skill Points) dataframe to .csv format for users viewing.\n")
-    df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
+    df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs.csv', index=False)
 
 
 def run_online_stat_scraper(output_box):
@@ -633,7 +636,7 @@ def html_mech_scraper(html, user_ign, output_box):
             update_output(output_box, "Converting (Base, Variant, User Defined Name, Tonnage, Faction, Weight Class, "
                                       "Skill Points) dataframe to .csv format for users viewing.\n")
 
-            df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs_SP.csv', index=False)
+            df_list_mech_name_sp.to_csv(cwd + os.sep + user_ign + "_" + 'owned_mechs.csv', index=False)
 
             update_output(output_box, "Your spreadsheets have been created! :D\n")
     except Exception as e:
@@ -641,6 +644,64 @@ def html_mech_scraper(html, user_ign, output_box):
         message = template.format(type(e).__name__)
         update_output(output_box, message)
         update_output(output_box, "Are you sure you selected the correct .html file?\n")
+
+
+    # A function to create a csv file showing a mapping of players to 'Mechs.
+def team_mech_list(output_box):
+    update_output(output_box, "Gathering all .csv files located in the same folder the tool is being run from.\n")
+    pathtocsvfiles = cwd + os.sep + '*.csv'  # make a path for glob to easily find all .csv files
+    all_files = glob.glob(pathtocsvfiles)  # go to the CWD and find all .csv files in the directory.
+    # A dictionary to store each unique base variant of a 'Mech along with the player(s) who own said 'Mech.
+    dict_mechswithplayernames = {}
+
+    owned_mechs_file_paths = [path for path in all_files if path.endswith("_owned_mechs.csv")]
+
+    if owned_mechs_file_paths:
+        # Loop through all the .csv files we found and...
+        for filename in owned_mechs_file_paths:
+            # Grab the player's name from the file name found.
+            playername = os.path.basename(filename)[:-len("_owned_mechs.csv")].replace("_", " ")
+
+            df = pd.read_csv(filename)  # A data frame to store the .csv file to be worked on.
+
+            update_output(output_box, "Gathering all unique base 'Mech variants for " + playername + "\n")
+            for base_variant in df['Base']:
+                # check if the key exists in the dictionary
+                if base_variant in dict_mechswithplayernames:
+                    # check if the playername is already in the list before appending it
+                    if playername not in dict_mechswithplayernames[base_variant]:
+                        dict_mechswithplayernames[base_variant].append(playername)
+                else:
+                    dict_mechswithplayernames[base_variant] = [playername]
+
+            update_output(output_box, "We have finished gathering all " + playername +"(s) base 'Mech variants "
+                                      "and put them all in a dictionary. \n"
+                                      "(E.G., {ACH-E: [" + playername+",Lusciousbalzack]}\n")
+
+        update_output(output_box, "Finished gathering all mechs and mapping them to players that own them.\n")
+
+        update_output(output_box, "Sorting the dictionary of mechs alphabetically.\n")
+
+        # Sort the dictionary keys alphabetically
+        dict_mechswithplayernames = dict(sorted(dict_mechswithplayernames.items()))
+
+        update_output(output_box, "Converting list of player names associated to 'Mechs into a string for easier "
+                                  "conversion of dictionary to data frame to .csv file.\n")
+        # Turn the values (player names) associated with a base 'Mech variant into a string so it uses only 1 column in the .csv file.
+        listplayernames_str = {k: ", ".join(v) for k, v in dict_mechswithplayernames.items()}
+
+        # Convert the dictionary to a dataframe with 2 columns ['Mech Base Variant, Player(s) who own the 'Mech].
+        update_output(output_box, "Creating data frame from the dictionary.\n")
+        dataframe = pd.DataFrame.from_dict(listplayernames_str, orient='index',
+                                           columns=["Player(s) who own the 'Mech"])
+        dataframe.index.name = '\'Mech Base Variant'
+        update_output(output_box, "Converting dataframe to .csv format for user viewing.\n")
+        dataframe.to_csv(cwd + os.sep + 'Team_List_Of_Mechs.csv')
+        update_output(output_box, "Your team's list of mechs has been created!\n")
+    else:
+        update_output(output_box, "We could not find any of the appropriately named .csv files in the same folder "
+                                  "this tool is in.\n")
+        update_output(output_box, "Please ensure the \"_owned_mechs.csv\"s are in the same folder that this tool is in.\n")
 
 # ------------------------------------------------------------------------------------------
 
@@ -816,21 +877,23 @@ def main():
                                     command=lambda: run_offline_stat_scraper(output_box), padx=10, pady=10)
     offline_mech_button = tk.Button(offline_frame, text="Offline Mech Scraper", font=("Arial", 12),
                                     command=lambda: run_offline_mech_scraper(output_box), padx=10, pady=10)
+    # create the update button
+    update_db_button = tk.Button(offline_frame, text="Update Offline MechDB", font=("Arial", 12),
+                                 command=lambda: update_offline_mech_db(output_box), padx=10, pady=10)
 
     # add the offline buttons to the frame
     offline_stat_button.pack(side="left", padx=10, pady=10)
+    update_db_button.pack(side="right", pady=10)
     offline_mech_button.pack(side="right", padx=10, pady=10)
 
-    # create a frame for the update button
-    update_frame = tk.Frame(root)
-    update_frame.pack()
+    # create a frame for the team 'Mech-list button
+    team_frame = tk.Frame(root)
+    team_frame.pack()
 
-    # create the update button
-    update_db_button = tk.Button(update_frame, text="Update Offline MechDB", font=("Arial", 12),
-                                 command=lambda: update_offline_mech_db(output_box), padx=10, pady=10)
+    team_mechlist_button = tk.Button(team_frame, text="Team 'Mech-List", font=("Arial", 12),
+                                     command=lambda: team_mech_list(output_box), padx=10, pady=10)
 
-    # add the update button to the frame
-    update_db_button.pack(side="bottom", pady=10)
+    team_mechlist_button.pack(side="bottom", padx=10, pady=10)
 
     root.mainloop()
 

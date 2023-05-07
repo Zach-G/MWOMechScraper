@@ -12,9 +12,9 @@ This tool simply opens a session with the mwomercs.com webpage and navigates to 
 
 The sorted .csv files list 'Mechs in descending order for quick and easy comprehension of what 'Mechs that player plays the most.
 
-MWOMechScraper now also spits out another .csv (owned_mechs_SP.csv) which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Tonnage, Faction, Weight Class, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Variant denotes the actual variant of the 'Mech (E.G., SDR-5D(P)). The Name is the name that the player has given the 'Mech in the Mechlab. The Tonnage is the amount of Tons the 'Mech is. The Faction details which faction the 'Mech is (I.E., Clan or Inner Sphere). The Weight Class details the size of the 'Mech (Light, Medium, Heavy, Assault). The Number of Equipped Skill Points shows how skilled out a 'Mech is.
+MWOMechScraper now also spits out another .csv (owned_mechs.csv) which contains a list of all 'Mechs you currently own in the format of [Base Mech, Variant, Name, Tonnage, Faction, Weight Class, Number of Equipped Skill Points]. The Base 'Mech details the base variant of special chassis variants (E.G., Spider-5D(P) variant's base variant is the Spider-5D). The Variant denotes the actual variant of the 'Mech (E.G., SDR-5D(P)). The Name is the name that the player has given the 'Mech in the Mechlab. The Tonnage is the amount of Tons the 'Mech is. The Faction details which faction the 'Mech is (I.E., Clan or Inner Sphere). The Weight Class details the size of the 'Mech (Light, Medium, Heavy, Assault). The Number of Equipped Skill Points shows how skilled out a 'Mech is.
 
-No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them send you their owned_mechs_SP.csv. Coalesce multiple players owned_mechs_SP.csvs to quickly and efficiently build your teams drop-deck based on what people already own!
+No longer are the days of asking players if they own a specific 'Mech, simply point them to this tool and have them send you their owned_mechs.csv. Coalesce multiple players owned_mechs.cvs to quickly and efficiently build your teams drop-deck based on what people already own! Use the "Team 'Mech-list" button to quickly see who owns what mechs to find substitute players in a moment's notice or to save your players from having to spend C-Bills / MC!
 
 ---
 
@@ -64,6 +64,7 @@ python -m pip install requests
 python -m pip install pandas
 python -m pip install regex
 python -m pip install tkinter
+python -m pip install glob
 ```
 
 #### What do these dependencies do?
@@ -72,6 +73,7 @@ python -m pip install tkinter
 [pandas](https://pandas.pydata.org/) allows us to analyze and format the data scraped from mwomercs.com.
 [regex](https://docs.python.org/3/howto/regex.html) is used for regular expressions.
 [tkinter](https://docs.python.org/3/library/tkinter.html) is used to create the GUI.
+[glob](https://docs.python.org/3/library/glob.html) is used to find all pathnames matching a specified pattern.
 
 Once you have installed Python and all the required libraries simply scroll up, find the big green '<>Code' button, 
 click on it, select 'Download ZIP', and extract the contents of the .zip file to where ever you like.
@@ -85,7 +87,7 @@ Thank you Tarogato for being a guinea pig and helping me test this tool via atte
 - Updating command prompt pip commands
 - Updating ReadMe
 - Pushing me to hide the password
-- Pointing out redundancies and suggesting additions to owned_mechs_SP.csv
+- Pointing out redundancies and suggesting additions to owned_mechs.csv
 
 A big thank you to Woodrick for asking that this tool be developed.
 - Making suggestions for the README
@@ -101,3 +103,7 @@ Thank you Bak3y for providing a way for users to use a creds.txt so that users d
 Thank you K2B for creating and maintaining mechDB! This tool would be incomplete without your API!
 
 Thank you CougChaos for helping find bugs within the HTML scraper.
+
+A big thank you to the following players who sent me their _owned_mechs.csv's so that the example Team_List_Of_Mechs.csv could be populated with real player information!
+- U94, abobra, Sunwraith, Chosen by Heaven, NimhTG, VulkanNo1, SirEpicPwner, and Tarogato,
+- and the pilot who wished to remain nameless, Generic Player 1.
