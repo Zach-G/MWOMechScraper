@@ -139,8 +139,11 @@ def player_owned_mechs_info(session, user_ign, output_box):
     update_output(output_box, "Opening session with " + collection_data_url + "\n")
     response = session.get(collection_data_url)
 
-    # A dictionary to contain 'Mech IDs and their skill nodes.
-    dict_mech_ids = {}
+    # A list to contain the dictionaries of owned 'Mechs.
+    # This will look like,
+    # list = [{'name': 'ach-e', 'display_name': 'ACH-E', 'mech_ids': [xxxxxx, yyyyyyy, ...], ...},
+    #        ...]
+    list_owned_mechs = []
 
     # Convert the JSON text into a python recognizable data format (I.E., Dict)
     update_output(output_box, "Loading players 'Mech Collection JSON.\n")
@@ -149,12 +152,10 @@ def player_owned_mechs_info(session, user_ign, output_box):
     update_output(output_box, "Parsing the JSON and gathering all owned 'Mechs Variants and associated mechIDs.\n")
     for collection_data in collection:
         variants_data = collection_data['variants']
-        for specific_variant in variants_data:
-            if variants_data[specific_variant]['owned'] is True:
-                # Store the list of mechIDs for a specific variant
-                mech_ids = variants_data[specific_variant]['mech_ids']
-                # Create an entry in the dictionary of 'Mechs to hold the list of mechIDs
-                dict_mech_ids[variants_data[specific_variant]['display_name']] = mech_ids
+        for specific_variant_id in variants_data:
+            if variants_data[specific_variant_id]['owned'] is True:
+                list_owned_mechs.append(variants_data[specific_variant_id])
+
     update_output(output_box, "Finished parsing and gathering all owned 'Mech Variants and their associated mechIDs.\n")
 
     # A list to contain tuples (Mech Variant, Name player gave it, # skill points assigned).
@@ -168,13 +169,14 @@ def player_owned_mechs_info(session, user_ign, output_box):
     # also grab chassis data from the MechDB API - we have to lie about the user agent; or we'll get blocked
     mech_data = mech_db_helper(output_box)
 
-    for mech, mechID in dict_mech_ids.items():
-        for i in mechID:
+    for index in list_owned_mechs:
+        mech_ids = index.get('mech_ids')
+        for spec_mech_id in mech_ids:
             # We now have access to each individual 'mechs mechID.
 
             # ------------- Individual mech's skill point scraper ---------------
-            # Create url of the specific 'Mech we want the information of
-            spec_mech_url = collection_data_url + "/stats?mid[]=" + i
+            # Create url of the specific 'Mech we want the information of.
+            spec_mech_url = collection_data_url + "/stats?mid[]=" + spec_mech_id
             response_spec_mech = session.get(spec_mech_url)
             dict_spec_mech = json.loads(response_spec_mech.text)
 
@@ -187,15 +189,16 @@ def player_owned_mechs_info(session, user_ign, output_box):
                 if mech_data != "":
                     for mech_info in mech_data["data"]:
                         # Check that mechdb 'name' for the mech matches the 'name' found in the JSON retrieved from the website.
-                        if re.sub(r'[-()]', '', mech_info['name']).lower() == re.sub(r'[-()]', '', mech).lower():
+                        if re.sub(r'[-()]', '', mech_info['name']).lower() == re.sub(r'[-()]', '', index.get('name')).lower():
 
 
                             mech_tonnage = mech_info['tonnage']
                             mech_faction = mech_info['faction']
                             mech_class = mech_info['class']
+                            break
                 # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
                 # crafting of look-up tables.
-                list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", mech), mech, mechlab_mech_name, mech_tonnage,
+                list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", index.get('display_name')), index.get('display_name'), mechlab_mech_name, mech_tonnage,
                                                 mech_faction, mech_class, spec_mech_skills))
     update_output(output_box, "Finished gathering information about player's owned 'Mechs.\n")
 
@@ -481,7 +484,7 @@ def run_offline_stat_scraper(output_box):
     update_output(output_box, "Running Offline Stat Scraper\n")
     update_output(output_box, "Please select the HTML file containing the stats.\n")
 
-    soup = get_file_path(output_box)
+    soup = get_file_path_html(output_box)
     if soup is not None:  # check if soup is not None
         update_output(output_box, "Please enter your in-game username so we may properly label the file.\n")
         user_ign = get_user_ign(output_box)
@@ -498,13 +501,15 @@ def run_offline_stat_scraper(output_box):
         update_output(output_box, "File path not valid or file not selected. HTML file does not exist.\n")
 
 
-def run_offline_mech_scraper(output_box):
-    # Code for offline mech scraper
+def run_html_mech_scraper(output_box):
+    # Code for HTML mech scraper
     update_output(output_box, "Running Offline Mech Scraper\n")
-    soup = get_file_path(output_box)
+    soup = get_file_path_html(output_box)
+
     if soup is not None:  # check if soup is not None
         user_ign = get_user_ign(output_box)
         html_mech_scraper(soup, user_ign, output_box)
+
     else:
         update_output(output_box, "File path not valid or file not selected. HTML file does not exist.\n")
 
@@ -522,6 +527,7 @@ def html_mech_scraper(html, user_ign, output_box):
         for owned_mechs in html.find_all('li', class_='mech-collection-item owned'):
             # Get the 'Mechs Chassis Variant from the <h5> Header.
             chassis_variant = owned_mechs.find('h5').text
+            update_output(output_box, "We are looking at: " + chassis_variant + "\n")
 
             parent = owned_mechs.find_parent('ul')
             grandparent = parent.find_parent('div')
@@ -590,7 +596,13 @@ def html_mech_scraper(html, user_ign, output_box):
                             for mech_info in mech_data["data"]:
                                 # Remove all '- ( and )' characters from the name variable from MechDB.
                                 name = re.sub(r'[-()]', '', mech_info['name'])
-
+                                update_output(output_box, "Current MechDB Mech is: " + name + "\n")
+                                # Hardcoded name-swap because the HTML recognizes the Viper Scaleshot as "VPR-SCS(LGD) and not "VPR-DI(LGD)"
+                                # due to it using the display name of the mech instead of the 'Mechs proper name.
+                                # PGI, if you read this... Please fix your JSON and the in-game file so that the VPR-DI(LGD)
+                                # gets replaced with its new name of VPR-SCS(LGD).
+                                if name == "vprdilgd":
+                                    name = "vprscslgd"
                                 # Check that our name variable matches the chassis variant we are looking at
                                 if name == re.sub(r'[-()]', '', chassis_variant.lower()):
                                     mech_tonnage = mech_info['tonnage']
@@ -598,6 +610,7 @@ def html_mech_scraper(html, user_ign, output_box):
                                     mech_list.append(((re.sub("[(].*?[)]", "", chassis_variant), chassis_variant,
                                                    mechlab_mech_name, mech_tonnage, mech_faction, mech_weight_class,
                                                    num_skill_nodes_equipped)))
+                                    break
                         else:
                             # The JSON string of information does not exist.
                             mech_tonnage = "--"
@@ -702,7 +715,6 @@ def team_mech_list(output_box):
         update_output(output_box, "We could not find any of the appropriately named .csv files in the same folder "
                                   "this tool is in.\n")
         update_output(output_box, "Please ensure the \"_owned_mechs.csv\"s are in the same folder that this tool is in.\n")
-
 # ------------------------------------------------------------------------------------------
 
 
@@ -729,7 +741,7 @@ def is_site_available(url):
         return False
 
 
-def get_file_path(output_box):
+def get_file_path_html(output_box):
     # Ask the user to select a file
     update_output(output_box, "Gathering file path to the HTML file from user.\n")
 
@@ -814,7 +826,7 @@ def check_log_in_creds(response, output_box):
     if 'Invalid email/password' in response.text:
         update_output(output_box, "Invalid email/password entered, please try again.\n")
         return False
-    if 'An internal server error has occured' in response.text:  # Lols. PGI has a typo in their error message.
+    if 'An internal server error has occurred' in response.text:  # Lols. PGI has a typo in their error message.
         update_output(output_box, "(50) An internal server error has occurred. Please contact support.\n")
         update_output(output_box, "... Just to be clear, contact PGI support. It's their error, not mine.\n")
         return False
@@ -873,12 +885,12 @@ def main():
     offline_frame.pack()
 
     # create the offline buttons
-    offline_stat_button = tk.Button(offline_frame, text="Offline Stat Scraper", font=("Arial", 12),
+    offline_stat_button = tk.Button(offline_frame, text="HTML File Stat Scraper", font=("Arial", 12),
                                     command=lambda: run_offline_stat_scraper(output_box), padx=10, pady=10)
-    offline_mech_button = tk.Button(offline_frame, text="Offline Mech Scraper", font=("Arial", 12),
-                                    command=lambda: run_offline_mech_scraper(output_box), padx=10, pady=10)
+    offline_mech_button = tk.Button(offline_frame, text="HTML File Mech Scraper", font=("Arial", 12),
+                                    command=lambda: run_html_mech_scraper(output_box), padx=10, pady=10)
     # create the update button
-    update_db_button = tk.Button(offline_frame, text="Update Offline MechDB", font=("Arial", 12),
+    update_db_button = tk.Button(offline_frame, text="Update MechDB JSON", font=("Arial", 12),
                                  command=lambda: update_offline_mech_db(output_box), padx=10, pady=10)
 
     # add the offline buttons to the frame
