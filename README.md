@@ -23,7 +23,7 @@ This tool needs to log into your MWO Profile page to access your mech data. Your
 Please, feel free to review the code yourself and ensure that the only addresses used are the MWOMercs login, profile pages and your personal accounts JSONs.
 
 ## HOW TO USE
-To run this tool simply download and run the executable located in https://github.com/Zach-G/MWOMechScraper/releases. Just scroll down to the bottom of the page, click 'MWOMechScraper.exe' and the download will begin. The tool will then be residing in your 'downloads' folder. Please note that MWOMechScraper will create the csv files in whatever folder it is contained in. I.E, If you run the tool from your downloads folder, it will generate the csv files in your downloads folder.
+To run this tool simply download and run the executable located in https://github.com/Zach-G/MWOMechScraper/releases/latest. Just scroll down to the bottom of the page, click 'MWOMechScraper.exe' and the download will begin. The tool will then be residing in your 'downloads' folder. Please note that MWOMechScraper will create the csv files in whatever folder it is contained in. I.E, If you run the tool from your downloads folder, it will generate the csv files in your downloads folder.
 
 Again, the tool will prompt you for the email and password that you use for [MWO](https://mwomercs.com/) if you select the buttons labeled "Online". Type in your email and password into the terminal when prompted and now wait until your personal .CSV files have been created!
 
