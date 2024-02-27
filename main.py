@@ -154,7 +154,8 @@ def player_owned_mechs_info(session, user_ign, output_box):
         variants_data = collection_data['variants']
         for specific_variant_id in variants_data:
             if variants_data[specific_variant_id]['owned'] is True:
-                list_owned_mechs.append(variants_data[specific_variant_id])
+
+                list_owned_mechs.append({specific_variant_id: variants_data[specific_variant_id]})
 
     update_output(output_box, "Finished parsing and gathering all owned 'Mech Variants and their associated mechIDs.\n")
 
@@ -169,37 +170,38 @@ def player_owned_mechs_info(session, user_ign, output_box):
     # also grab chassis data from the MechDB API - we have to lie about the user agent; or we'll get blocked
     mech_data = mech_db_helper(output_box)
 
-    for index in list_owned_mechs:
-        mech_ids = index.get('mech_ids')
-        for spec_mech_id in mech_ids:
+    for _id in list_owned_mechs:
+
+        for mech_id, spec_mech_info in _id.items():
             # We now have access to each individual 'mechs mechID.
+            spec_mech_ids = spec_mech_info['mech_ids']
+            for ind_mech_id in spec_mech_ids:
+                # ------------- Individual mech's skill point scraper ---------------
+                # Create url of the specific 'Mech we want the information of.
+                spec_mech_url = collection_data_url + "/stats?mid[]=" + ind_mech_id
+                response_spec_mech = session.get(spec_mech_url)
+                dict_spec_mech = json.loads(response_spec_mech.text)
 
-            # ------------- Individual mech's skill point scraper ---------------
-            # Create url of the specific 'Mech we want the information of.
-            spec_mech_url = collection_data_url + "/stats?mid[]=" + spec_mech_id
-            response_spec_mech = session.get(spec_mech_url)
-            dict_spec_mech = json.loads(response_spec_mech.text)
+                for mech_chassis in dict_spec_mech['mechs']:
+                    mechlab_mech_name = mech_chassis['name']
+                    spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
+                    mech_tonnage = "--"
+                    mech_faction = "--"
+                    mech_class = "--"
+                    if mech_data != "":
+                        for mech_info in mech_data["data"]:
+                            # Check that mechdb 'name' for the mech matches the 'name' found in the JSON retrieved from the website.
+                            #if re.sub(r'[-()]', '', mech_info['name']).lower() == re.sub(r'[-()]', '', index.get('name')).lower():
+                            if mech_info['id'] == mech_id:
 
-            for mech_chassis in dict_spec_mech['mechs']:
-                mechlab_mech_name = mech_chassis['name']
-                spec_mech_skills = mech_chassis['skills']['NumEquippedSkillNodes']
-                mech_tonnage = "--"
-                mech_faction = "--"
-                mech_class = "--"
-                if mech_data != "":
-                    for mech_info in mech_data["data"]:
-                        # Check that mechdb 'name' for the mech matches the 'name' found in the JSON retrieved from the website.
-                        if re.sub(r'[-()]', '', mech_info['name']).lower() == re.sub(r'[-()]', '', index.get('name')).lower():
-
-
-                            mech_tonnage = mech_info['tonnage']
-                            mech_faction = mech_info['faction']
-                            mech_class = mech_info['class']
-                            break
-                # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
-                # crafting of look-up tables.
-                list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", index.get('display_name')), index.get('display_name'), mechlab_mech_name, mech_tonnage,
-                                                mech_faction, mech_class, spec_mech_skills))
+                                mech_tonnage = mech_info['tonnage']
+                                mech_faction = mech_info['faction']
+                                mech_class = mech_info['class']
+                                break
+                    # Using regex to remove special variant tags from mechs to be used as a "base" 'Mech for easier
+                    # crafting of look-up tables.
+                    list_mech_chass_name_sp.append((re.sub("[(].*?[)]", "", spec_mech_info.get('display_name')), spec_mech_info.get('display_name'), mechlab_mech_name, mech_tonnage,
+                                                    mech_faction, mech_class, spec_mech_skills))
     update_output(output_box, "Finished gathering information about player's owned 'Mechs.\n")
 
     # Convert list of tuples (mech base variant, actual variant, name, tonnage, faction, weight class, equipped skill
